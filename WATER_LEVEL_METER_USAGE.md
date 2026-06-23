@@ -199,6 +199,12 @@ It is designed for:
   ./scripts/deploy-centos.sh /home/<user>/WaterLevelMetre main nodered
   ```
 
+- If Node-RED runs in a container, pass the container name as the third argument instead of a systemd service name:
+
+  ```bash
+  ./scripts/deploy-centos.sh /home/<user>@ourhome.local/WaterLevelMetre main node-red
+  ```
+
 - The flow currently expects these MQTT topics:
   - telemetry in: `waterlevel/+/data`
   - settings in: `waterlevel/+/settings`
