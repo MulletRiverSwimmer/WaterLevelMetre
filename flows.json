@@ -1681,5 +1681,83 @@
       "node-red-contrib-influxdb": "0.7.0",
       "@flowfuse/node-red-dashboard-2-ui-led": "1.1.0"
     }
+  },
+  {
+    "id": "dbg_broker_config_set_listener",
+    "type": "mqtt in",
+    "z": "5f797197af0573e8",
+    "name": "Broker Config Set",
+    "topic": "waterlevel/+/config/set",
+    "qos": 2,
+    "datatype": "json",
+    "broker": "e0e7eb4b34d557fd",
+    "nl": false,
+    "rap": true,
+    "rh": 0,
+    "x": 760,
+    "y": 1000,
+    "wires": [
+      "dbg_broker_config_set_filter"
+    ]
+  },
+  {
+    "id": "dbg_broker_config_set_filter",
+    "type": "function",
+    "z": "5f797197af0573e8",
+    "name": "Filter Config Set by CurrentTank",
+    "func": "var tank = global.get(\"CurrentTank\");\\nif (!tank) return null;\\nif (!msg.payload || msg.payload.device_id !== tank) return null;\\nmsg.payload = {\\n  ts: new Date().toISOString(),\\n  topic: msg.topic,\\n  device_id: msg.payload.device_id,\\n  control_origin: msg.payload.control_origin || \"(none)\",\\n  control_tx_id: msg.payload.control_tx_id || \"(none)\",\\n  production_mode: msg.payload.production_mode,\\n  raw: msg.payload\\n};\\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1030,
+    "y": 1000,
+    "wires": [
+      "dbg_broker_config_set_formatter"
+    ]
+  },
+  {
+    "id": "dbg_broker_config_set_formatter",
+    "type": "function",
+    "z": "5f797197af0573e8",
+    "name": "Format Broker Config Set",
+    "func": "if (typeof msg.payload === \"object\") {\\n  msg.payload = JSON.stringify(msg.payload, null, 2);\\n}\\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1110,
+    "y": 1060,
+    "wires": [
+      "dbg_broker_config_set_display"
+    ]
+  },
+  {
+    "id": "dbg_broker_config_set_display",
+    "type": "ui-text",
+    "z": "5f797197af0573e8",
+    "group": "23f681f586e541dc",
+    "order": 7,
+    "width": 4,
+    "height": 4,
+    "name": "Debug: Broker Config/Set",
+    "label": "Broker Observed Config/Set",
+    "format": "{{msg.payload}}",
+    "layout": "row-spread",
+    "style": false,
+    "font": "monospace",
+    "fontSize": 11,
+    "color": "#717171",
+    "wrapText": true,
+    "className": "",
+    "value": "payload",
+    "valueType": "msg",
+    "x": 1250,
+    "y": 1060,
+    "wires": []
   }
 ]
