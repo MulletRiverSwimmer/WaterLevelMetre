@@ -10,5 +10,5 @@ REMOTE_REPO="/home/clyde@ourhome.local/WaterLevelMetre"
 REMOTE_BRANCH="main"
 REMOTE_TARGET="nodered"
 
-ssh -tt "${REMOTE_USER}@${REMOTE_HOST}" \
-    "cd '${REMOTE_REPO}' && bash ./scripts/deploy-centos.sh '${REMOTE_REPO}' '${REMOTE_BRANCH}' '${REMOTE_TARGET}'"
+ssh -tt -l "${REMOTE_USER}" "${REMOTE_HOST}" \
+    "sudo -v && cd '${REMOTE_REPO}' && bash ./scripts/deploy-centos.sh '${REMOTE_REPO}' '${REMOTE_BRANCH}' '${REMOTE_TARGET}'"
