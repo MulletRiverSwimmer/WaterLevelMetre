@@ -1,5 +1,7 @@
 #include "app_state.h"
 
+static char g_last_received_production_mode[32] = "absent";
+
 const char* mqttStateName(int state) {
   switch (state) {
     case MQTT_CONNECTION_TIMEOUT: return "TIMEOUT";
@@ -173,10 +175,11 @@ void processIncomingMqtt(uint32_t timeoutMs) {
 void publishConfigAck(bool success, const char* message) {
   char ackPayload[320];
   snprintf(ackPayload, sizeof(ackPayload),
-           "{\"device_id\":\"%s\",\"success\":%s,\"message\":\"%s\",\"applied_production_mode\":%s,\"applied_enable_deep_sleep\":%s,\"applied_ntp_enabled\":%s}",
+           "{\"device_id\":\"%s\",\"success\":%s,\"message\":\"%s\",\"received_production_mode\":\"%s\",\"applied_production_mode\":%s,\"applied_enable_deep_sleep\":%s,\"applied_ntp_enabled\":%s}",
            device_id,
            success ? "true" : "false",
            message ? message : "",
+           g_last_received_production_mode,
            production_mode ? "true" : "false",
            enable_deep_sleep ? "true" : "false",
            ntp_enabled ? "true" : "false");
@@ -197,6 +200,14 @@ bool applyRemoteConfigJson(const char* json, char* resultMsg, size_t resultMsgLe
   }
 
   bool changed = false;
+
+  if (doc["production_mode"].isNull()) {
+    strlcpy(g_last_received_production_mode, "absent", sizeof(g_last_received_production_mode));
+  } else {
+    String rawProd;
+    serializeJson(doc["production_mode"], rawProd);
+    strlcpy(g_last_received_production_mode, rawProd.c_str(), sizeof(g_last_received_production_mode));
+  }
 
   auto parseBoolField = [](JsonVariantConst field, bool* out) -> bool {
     if (!out || field.isNull()) return false;
