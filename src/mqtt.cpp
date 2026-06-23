@@ -171,12 +171,15 @@ void processIncomingMqtt(uint32_t timeoutMs) {
 }
 
 void publishConfigAck(bool success, const char* message) {
-  char ackPayload[256];
+  char ackPayload[320];
   snprintf(ackPayload, sizeof(ackPayload),
-           "{\"device_id\":\"%s\",\"success\":%s,\"message\":\"%s\"}",
+           "{\"device_id\":\"%s\",\"success\":%s,\"message\":\"%s\",\"applied_production_mode\":%s,\"applied_enable_deep_sleep\":%s,\"applied_ntp_enabled\":%s}",
            device_id,
            success ? "true" : "false",
-           message ? message : "");
+           message ? message : "",
+           production_mode ? "true" : "false",
+           enable_deep_sleep ? "true" : "false",
+           ntp_enabled ? "true" : "false");
   publishMqttMessage(mqtt_config_ack_topic, ackPayload, true, false);
 }
 
@@ -200,6 +203,12 @@ bool applyRemoteConfigJson(const char* json, char* resultMsg, size_t resultMsgLe
 
     if (field.is<bool>()) {
       *out = field.as<bool>();
+      return true;
+    }
+
+    if (field.is<int>() || field.is<long>() || field.is<unsigned int>() || field.is<unsigned long>()) {
+      long n = field.as<long>();
+      *out = (n != 0);
       return true;
     }
 
@@ -258,6 +267,11 @@ bool applyRemoteConfigJson(const char* json, char* resultMsg, size_t resultMsgLe
     Serial.println(parsedBool);
     production_mode = parsedBool;
     changed = true;
+  } else if (!doc["production_mode"].isNull()) {
+    String raw;
+    serializeJson(doc["production_mode"], raw);
+    infoPrint(F("[CONFIG] production_mode parse skipped, raw value: "));
+    Serial.println(raw);
   }
 
   if (doc["log_level"].is<int>() || doc["log_level"].is<uint8_t>()) {
