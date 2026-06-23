@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#include "app_version.h"
 
 #define LED_PIN D4
 

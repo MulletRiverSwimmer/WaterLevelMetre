@@ -365,6 +365,8 @@ void publishSettingsToMqtt() {
   snprintf(settingsTopic, sizeof(settingsTopic), "%s/settings", mqtt_topic);
 
   JsonDocument doc;
+  doc["firmware_version"] = FIRMWARE_VERSION;
+  doc["firmware_build_date"] = FIRMWARE_BUILD_DATE;
   doc["wifi_ssid"] = wifi_ssid;
   doc["mqtt_server"] = mqtt_server;
   doc["mqtt_port"] = mqtt_port;

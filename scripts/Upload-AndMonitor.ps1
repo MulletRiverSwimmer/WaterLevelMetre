@@ -26,6 +26,15 @@ function Write-Info { Write-Host $args -ForegroundColor Cyan }
 
 Write-Info "[UPLOAD] Starting firmware upload with monitor control..."
 
+# Bump firmware version
+Write-Info "[VERSION] Bumping firmware version..."
+try {
+    & (Join-Path $PSScriptRoot "Bump-FirmwareVersion.ps1")
+} catch {
+    Write-Error_ "[VERSION] Failed to bump version: $_"
+    exit 1
+}
+
 # Get PlatformIO path
 $platformio = $null
 $explicitPath = Join-Path $env:USERPROFILE ".platformio\penv\Scripts\platformio.exe"

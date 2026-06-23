@@ -144,6 +144,11 @@ void setup() {
   delay(200);
 
   Serial.println(F("\n[BOOT] Water Level Meter starting up..."));
+  infoPrint(F("[BOOT] Firmware version: "));
+  Serial.print(FIRMWARE_VERSION);
+  Serial.print(F(" (built "));
+  Serial.print(FIRMWARE_BUILD_DATE);
+  Serial.println(F(")"));
 
 #ifdef ESP32
   Serial1.begin(9600);

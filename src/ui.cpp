@@ -81,6 +81,8 @@ void printIpDetails() {
 
 void printConfig() {
   debugPrintln(F("\n=== Current Configuration ==="));
+  debugPrint(F("Firmware Version: ")); Serial.print(FIRMWARE_VERSION); Serial.print(F(" ("));
+  Serial.print(FIRMWARE_BUILD_DATE); Serial.println(F(")"));
   debugPrint(F("WiFi SSID: ")); Serial.println(wifi_ssid);
   debugPrint(F("MQTT Server: ")); Serial.print(mqtt_server); Serial.print(':'); Serial.println(mqtt_port);
   debugPrint(F("MQTT Connect Attempts: ")); Serial.println(mqtt_connect_attempts);
@@ -112,6 +114,9 @@ void showMenu() {
   char right[RIGHT_COL_MAX];
 
   debugPrintln(F("\n=== Water Level Meter Menu ==="));
+
+  snprintf(right, sizeof(right), "Firmware: %s", FIRMWARE_VERSION);
+  printMenuLine("VERSION", right);
 
   snprintf(right, sizeof(right), "WiFi SSID: %s", wifi_ssid);
   printMenuLine("c: Clear config file (/config.json)", right);
