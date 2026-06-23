@@ -6,30 +6,25 @@ BRANCH="${2:-main}"
 TARGET_NAME="${3:-nodered}"
 CONTAINER_PROJECT_DIR="${4:-/data/projects/$(basename "${REPO_DIR}")}"
 
-repo_update_cmd() {
+update_host_repo() {
 	local branch="$1"
-	cat <<EOF
-set -euo pipefail
-git fetch origin "${branch}"
-git checkout "${branch}"
-git pull --ff-only origin "${branch}"
-EOF
+	echo "[deploy] updating host repository checkout"
+	git fetch origin "${branch}"
+	git checkout "${branch}"
+	git pull --ff-only origin "${branch}"
 }
 
-update_container_project() {
+sync_container_flows() {
 	local runtime="$1"
 	local target_name="$2"
-	local branch="$3"
-	local project_dir="$4"
-	local script
+	local project_dir="$3"
 
 	if ! sudo "${runtime}" exec "${target_name}" sh -lc "test -d '${project_dir}'"; then
 		return 1
 	fi
 
-	echo "[deploy] updating ${runtime} project: ${project_dir}"
-	script=$(repo_update_cmd "${branch}")
-	sudo "${runtime}" exec "${target_name}" sh -lc "cd '${project_dir}' && ${script}"
+	echo "[deploy] syncing flows.json to ${runtime} project: ${project_dir}"
+	sudo "${runtime}" cp "${REPO_DIR}/flows.json" "${target_name}:${project_dir}/flows.json"
 	return 0
 }
 
@@ -67,22 +62,19 @@ update_active_project() {
 	local target_name="$2"
 	local project_dir="$3"
 
+	update_host_repo "${branch}"
+
 	if command -v docker >/dev/null 2>&1 && sudo docker ps -a --format '{{.Names}}' | grep -Fxq "${target_name}"; then
-		if update_container_project docker "${target_name}" "${branch}" "${project_dir}"; then
+		if sync_container_flows docker "${target_name}" "${project_dir}"; then
 			return 0
 		fi
 	fi
 
 	if command -v podman >/dev/null 2>&1 && sudo podman ps -a --format '{{.Names}}' | grep -Fxq "${target_name}"; then
-		if update_container_project podman "${target_name}" "${branch}" "${project_dir}"; then
+		if sync_container_flows podman "${target_name}" "${project_dir}"; then
 			return 0
 		fi
 	fi
-
-	echo "[deploy] updating host repository checkout"
-	git fetch origin "${BRANCH}"
-	git checkout "${BRANCH}"
-	git pull --ff-only origin "${BRANCH}"
 }
 
 # Some shells/users accidentally pass a domain-qualified path like:
