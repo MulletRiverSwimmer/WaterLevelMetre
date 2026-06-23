@@ -1252,6 +1252,90 @@
         "wires": []
     },
     {
+        "id": "dbg_current_settings_listener",
+        "type": "mqtt in",
+        "z": "5f797197af0573e8",
+        "name": "Device Settings",
+        "topic": "waterlevel/+/settings",
+        "qos": 2,
+        "datatype": "json",
+        "broker": "e0e7eb4b34d557fd",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "x": 750,
+        "y": 940,
+        "wires": [
+            [
+                "dbg_current_settings_filter"
+            ]
+        ]
+    },
+    {
+        "id": "dbg_current_settings_filter",
+        "type": "function",
+        "z": "5f797197af0573e8",
+        "name": "Filter by CurrentTank",
+        "func": "if (msg.payload.device_id === global.get(\"CurrentTank\")) {\n  return msg;\n}\nreturn null;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1000,
+        "y": 940,
+        "wires": [
+            [
+                "dbg_current_settings_formatter"
+            ]
+        ]
+    },
+    {
+        "id": "dbg_current_settings_formatter",
+        "type": "function",
+        "z": "5f797197af0573e8",
+        "name": "Format Settings",
+        "func": "if (typeof msg.payload === 'object') {\n  msg.payload = JSON.stringify(msg.payload, null, 2);\n}\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1100,
+        "y": 940,
+        "wires": [
+            [
+                "dbg_current_settings_display"
+            ]
+        ]
+    },
+    {
+        "id": "dbg_current_settings_display",
+        "type": "ui-text",
+        "z": "5f797197af0573e8",
+        "group": "23f681f586e541dc",
+        "order": 6,
+        "width": 4,
+        "height": 3,
+        "name": "Debug: Current Device Settings",
+        "label": "Device's Current Settings",
+        "format": "{{msg.payload}}",
+        "layout": "row-spread",
+        "style": false,
+        "font": "monospace",
+        "fontSize": 11,
+        "color": "#717171",
+        "wrapText": true,
+        "className": "",
+        "value": "payload",
+        "valueType": "msg",
+        "x": 1240,
+        "y": 940,
+        "wires": []
+    },
+    {
         "id": "f4a12c8d77e64f1a",
         "type": "ui-template",
         "z": "5f797197af0573e8",
