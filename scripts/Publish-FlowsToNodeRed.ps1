@@ -85,7 +85,7 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Write-Host "`n=== Deploying to Node-RED container ===" -ForegroundColor Cyan
-$sshCmd = "sudo -v && cd '$RemoteRepoPath' && bash ./scripts/deploy-centos.sh '$RemoteRepoPath' main $ContainerName"
+$sshCmd = "cd '$RemoteRepoPath' && bash ./scripts/deploy-centos.sh '$RemoteRepoPath' main $ContainerName"
 & ssh -tt -l "$RemoteUser" "$RemoteHost" "$sshCmd"
 if ($LASTEXITCODE -ne 0) {
     Write-Host "SSH deploy failed!" -ForegroundColor Red

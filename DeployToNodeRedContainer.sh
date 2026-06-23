@@ -11,4 +11,4 @@ REMOTE_BRANCH="main"
 REMOTE_TARGET="nodered"
 
 ssh -tt -l "${REMOTE_USER}" "${REMOTE_HOST}" \
-    "sudo -v && cd '${REMOTE_REPO}' && bash ./scripts/deploy-centos.sh '${REMOTE_REPO}' '${REMOTE_BRANCH}' '${REMOTE_TARGET}'"
+    "cd '${REMOTE_REPO}' && bash ./scripts/deploy-centos.sh '${REMOTE_REPO}' '${REMOTE_BRANCH}' '${REMOTE_TARGET}'"

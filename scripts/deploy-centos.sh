@@ -31,7 +31,7 @@ sync_container_flows() {
 restart_target() {
 	local target_name="$1"
 
-	if sudo systemctl list-unit-files --type=service --no-legend 2>/dev/null | awk '{print $1}' | grep -Fxq "${target_name}.service"; then
+	if command -v systemctl >/dev/null 2>&1 && systemctl list-unit-files --type=service --no-legend 2>/dev/null | awk '{print $1}' | grep -Fxq "${target_name}.service"; then
 		echo "[deploy] restarting systemd service: ${target_name}"
 		sudo systemctl restart "${target_name}"
 		sudo systemctl --no-pager --full status "${target_name}" | head -n 20
