@@ -19,13 +19,11 @@ sync_container_flows() {
 	local target_name="$2"
 	local project_dir="$3"
 
-	if ! sudo "${runtime}" exec "${target_name}" sh -lc "test -d '${project_dir}'"; then
-		return 1
-	fi
-
 	echo "[deploy] syncing flows.json to ${runtime} project: ${project_dir}"
-	sudo "${runtime}" cp "${REPO_DIR}/flows.json" "${target_name}:${project_dir}/flows.json"
-	return 0
+	if sudo "${runtime}" cp "${REPO_DIR}/flows.json" "${target_name}:${project_dir}/flows.json"; then
+		return 0
+	fi
+	return 1
 }
 
 restart_target() {
