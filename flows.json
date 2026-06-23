@@ -1127,7 +1127,7 @@
     "type": "function",
     "z": "5f797197af0573e8",
     "name": "Log Config Set",
-    "func": "if (msg.topic && msg.topic.includes(\"/config/set\")) {\n  msg.lastConfigSetPayload = msg.payload;\n  global.set(\"lastConfigSet\", {ts: new Date().toLocaleString(), topic: msg.topic, payload: msg.payload});\n}\nreturn msg;",
+    "func": "if (msg.topic && msg.topic.includes('/config/set')) {\n  var p = msg.payload;\n  if (typeof p === 'string') {\n    try { p = JSON.parse(p); } catch (e) {}\n  }\n  msg.payload = {\n    ts: new Date().toISOString(),\n    topic: msg.topic,\n    control_origin: p && p.control_origin ? p.control_origin : '(none)',\n    control_tx_id: p && p.control_tx_id ? p.control_tx_id : '(none)',\n    production_mode: (p && Object.prototype.hasOwnProperty.call(p, 'production_mode')) ? p.production_mode : '(absent)',\n    raw: p\n  };\n  global.set('lastConfigSet', msg.payload);\n}\nreturn msg;",
     "outputs": 1,
     "timeout": 0,
     "noerr": 0,
@@ -1697,7 +1697,9 @@
     "x": 760,
     "y": 1000,
     "wires": [
-      "dbg_broker_config_set_filter"
+      [
+        "dbg_broker_config_set_filter"
+      ]
     ]
   },
   {
@@ -1705,7 +1707,7 @@
     "type": "function",
     "z": "5f797197af0573e8",
     "name": "Filter Config Set by CurrentTank",
-    "func": "var tank = global.get(\"CurrentTank\");\\nif (!tank) return null;\\nif (!msg.payload || msg.payload.device_id !== tank) return null;\\nmsg.payload = {\\n  ts: new Date().toISOString(),\\n  topic: msg.topic,\\n  device_id: msg.payload.device_id,\\n  control_origin: msg.payload.control_origin || \"(none)\",\\n  control_tx_id: msg.payload.control_tx_id || \"(none)\",\\n  production_mode: msg.payload.production_mode,\\n  raw: msg.payload\\n};\\nreturn msg;",
+    "func": "var tank = global.get('CurrentTank');\nvar m = (msg.topic || '').match(/^waterlevel\\\\/([^\\\\/]+)\\\\/config\\\\/set$/);\nvar topicDevice = m ? m[1] : '(unknown)';\nif (tank && topicDevice !== tank) return null;\n\nvar p = msg.payload;\nif (typeof p === 'string') {\n  try { p = JSON.parse(p); } catch (e) {}\n}\n\nmsg.payload = {\n  ts: new Date().toISOString(),\n  topic: msg.topic,\n  topic_device: topicDevice,\n  payload_device_id: p && p.device_id ? p.device_id : '(none)',\n  control_origin: p && p.control_origin ? p.control_origin : '(none)',\n  control_tx_id: p && p.control_tx_id ? p.control_tx_id : '(none)',\n  production_mode: (p && Object.prototype.hasOwnProperty.call(p, 'production_mode')) ? p.production_mode : '(absent)',\n  raw: p\n};\nreturn msg;",
     "outputs": 1,
     "timeout": 0,
     "noerr": 0,
@@ -1715,7 +1717,9 @@
     "x": 1030,
     "y": 1000,
     "wires": [
-      "dbg_broker_config_set_formatter"
+      [
+        "dbg_broker_config_set_formatter"
+      ]
     ]
   },
   {
@@ -1723,7 +1727,7 @@
     "type": "function",
     "z": "5f797197af0573e8",
     "name": "Format Broker Config Set",
-    "func": "if (typeof msg.payload === \"object\") {\\n  msg.payload = JSON.stringify(msg.payload, null, 2);\\n}\\nreturn msg;",
+    "func": "if (typeof msg.payload === 'object') {\n  msg.payload = JSON.stringify(msg.payload, null, 2);\n}\nreturn msg;",
     "outputs": 1,
     "timeout": 0,
     "noerr": 0,
@@ -1733,7 +1737,9 @@
     "x": 1110,
     "y": 1060,
     "wires": [
-      "dbg_broker_config_set_display"
+      [
+        "dbg_broker_config_set_display"
+      ]
     ]
   },
   {

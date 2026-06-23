@@ -2,6 +2,8 @@
 
 static char g_last_received_production_mode[32] = "absent";
 static char g_last_received_control_origin[64] = "absent";
+static bool g_last_received_has_production_mode = false;
+static size_t g_last_received_payload_len = 0;
 
 const char* mqttStateName(int state) {
   switch (state) {
@@ -174,14 +176,16 @@ void processIncomingMqtt(uint32_t timeoutMs) {
 }
 
 void publishConfigAck(bool success, const char* message) {
-  char ackPayload[320];
+  char ackPayload[420];
   snprintf(ackPayload, sizeof(ackPayload),
-           "{\"device_id\":\"%s\",\"success\":%s,\"message\":\"%s\",\"received_control_origin\":\"%s\",\"received_production_mode\":\"%s\",\"applied_production_mode\":%s,\"applied_enable_deep_sleep\":%s,\"applied_ntp_enabled\":%s}",
+           "{\"device_id\":\"%s\",\"success\":%s,\"message\":\"%s\",\"received_control_origin\":\"%s\",\"received_production_mode\":\"%s\",\"received_has_production_mode\":%s,\"received_payload_len\":%u,\"applied_production_mode\":%s,\"applied_enable_deep_sleep\":%s,\"applied_ntp_enabled\":%s}",
            device_id,
            success ? "true" : "false",
            message ? message : "",
            g_last_received_control_origin,
            g_last_received_production_mode,
+           g_last_received_has_production_mode ? "true" : "false",
+           (unsigned int)g_last_received_payload_len,
            production_mode ? "true" : "false",
            enable_deep_sleep ? "true" : "false",
            ntp_enabled ? "true" : "false");
@@ -193,6 +197,7 @@ bool applyRemoteConfigJson(const char* json, char* resultMsg, size_t resultMsgLe
 
   infoPrint(F("[CONFIG] Parsing JSON: "));
   Serial.println(json);
+  g_last_received_payload_len = strlen(json);
   
   JsonDocument doc;
   DeserializationError err = deserializeJson(doc, json);
@@ -211,8 +216,10 @@ bool applyRemoteConfigJson(const char* json, char* resultMsg, size_t resultMsgLe
   bool changed = false;
 
   if (doc["production_mode"].isNull()) {
+    g_last_received_has_production_mode = false;
     strlcpy(g_last_received_production_mode, "absent", sizeof(g_last_received_production_mode));
   } else {
+    g_last_received_has_production_mode = true;
     String rawProd;
     serializeJson(doc["production_mode"], rawProd);
     strlcpy(g_last_received_production_mode, rawProd.c_str(), sizeof(g_last_received_production_mode));
