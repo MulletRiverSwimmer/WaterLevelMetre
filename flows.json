@@ -1,1685 +1,1685 @@
 [
-    {
-        "id": "5f797197af0573e8",
-        "type": "tab",
-        "label": "WaterLevelMetre",
-        "disabled": false,
-        "info": "",
-        "env": []
-    },
-    {
-        "id": "91985e3d7c635738",
-        "type": "debug",
-        "z": "5f797197af0573e8",
-        "name": "debug 1",
-        "active": false,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "payload",
-        "targetType": "msg",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 480,
-        "y": 1720,
-        "wires": []
-    },
-    {
-        "id": "19feed59a75ef3b8",
-        "type": "mqtt in",
-        "z": "5f797197af0573e8",
-        "name": "",
-        "topic": "waterlevel/+/config/ack",
-        "qos": "2",
-        "datatype": "auto-detect",
-        "broker": "e0e7eb4b34d557fd",
-        "nl": false,
-        "rap": true,
-        "rh": 0,
-        "inputs": 0,
-        "x": 170,
-        "y": 1720,
-        "wires": [
-            [
-                "91985e3d7c635738"
-            ]
-        ]
-    },
-    {
-        "id": "d8c8f7d7c6f34f4f",
-        "type": "mqtt in",
-        "z": "5f797197af0573e8",
-        "name": "",
-        "topic": "waterlevel/+/data",
-        "qos": "2",
-        "datatype": "auto-detect",
-        "broker": "e0e7eb4b34d557fd",
-        "nl": false,
-        "rap": true,
-        "rh": 0,
-        "inputs": 0,
-        "x": 70,
-        "y": 420,
-        "wires": [
-            [
-                "d74297f9e9f4e5c2"
-            ]
-        ]
-    },
-    {
-        "id": "f3a6a87bc7a42112",
-        "type": "debug",
-        "z": "5f797197af0573e8",
-        "name": "debug 2",
-        "active": false,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "false",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 940,
-        "y": 20,
-        "wires": []
-    },
-    {
-        "id": "59701c271655fcd7",
-        "type": "ui-text",
-        "z": "5f797197af0573e8",
-        "group": "2370752e47519434",
-        "order": 4,
-        "width": 0,
-        "height": 0,
-        "name": "Tank-Depth",
-        "label": "Water Depth (cm)",
-        "format": "{{msg.payload}}",
-        "layout": "row-spread",
-        "style": false,
-        "font": "",
-        "fontSize": 16,
-        "color": "#717171",
-        "wrapText": false,
-        "className": "",
-        "value": "payload.depth_cm",
-        "valueType": "msg",
-        "x": 510,
-        "y": 740,
-        "wires": []
-    },
-    {
-        "id": "1ed0fe12e32c825f",
-        "type": "influxdb out",
-        "z": "5f797197af0573e8",
-        "influxdb": "f0d5e37227e2d9a4",
-        "name": "IoT",
-        "measurement": "distance_cm",
-        "precision": "",
-        "retentionPolicy": "",
-        "database": "database",
-        "precisionV18FluxV20": "ms",
-        "retentionPolicyV18Flux": "",
-        "org": "ourhome",
-        "bucket": "WaterTankMetre",
-        "x": 490,
-        "y": 420,
-        "wires": []
-    },
-    {
-        "id": "d74297f9e9f4e5c2",
-        "type": "function",
-        "z": "5f797197af0573e8",
-        "name": "Format MQTT to Influx",
-        "func": "msg.payload = [\n    {\n        distance_cm: msg.payload.distance_cm,\n        battery_v: msg.payload.battery_v,\n        battery_pct: msg.payload.battery_pct\n    },   // fields\n    {\n        device: msg.payload.device_id || global.get(\"CurrentTank\") || \"unknown\"\n    } // tags\n];\nreturn msg;\n",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 300,
-        "y": 420,
-        "wires": [
-            [
-                "1ed0fe12e32c825f"
-            ]
-        ]
-    },
-    {
-        "id": "622767fa66966484",
-        "type": "ui-text",
-        "z": "5f797197af0573e8",
-        "group": "2370752e47519434",
-        "order": 5,
-        "width": 0,
-        "height": 0,
-        "name": "Tank-BatteryV",
-        "label": "Battery (V)",
-        "format": "{{msg.payload}}",
-        "layout": "row-spread",
-        "style": false,
-        "font": "",
-        "fontSize": 16,
-        "color": "#717171",
-        "wrapText": false,
-        "className": "",
-        "value": "payload.battery_v",
-        "valueType": "msg",
-        "x": 520,
-        "y": 820,
-        "wires": []
-    },
-    {
-        "id": "4f3f707d5289d788",
-        "type": "ui-text",
-        "z": "5f797197af0573e8",
-        "group": "2370752e47519434",
-        "order": 6,
-        "width": 0,
-        "height": 0,
-        "name": "Tank-PowerPercentage",
-        "label": "Battery (%)",
-        "format": "{{msg.payload}}",
-        "layout": "row-spread",
-        "style": false,
-        "font": "",
-        "fontSize": 16,
-        "color": "#717171",
-        "wrapText": false,
-        "className": "",
-        "value": "payload.battery_pct",
-        "valueType": "msg",
-        "x": 550,
-        "y": 860,
-        "wires": []
-    },
-    {
-        "id": "382f44bbc2da4df1",
-        "type": "ui-text",
-        "z": "5f797197af0573e8",
-        "group": "2370752e47519434",
-        "order": 7,
-        "width": 0,
-        "height": 0,
-        "name": "Tank-Percent",
-        "label": "Storage (%)",
-        "format": "{{msg.payload}}",
-        "layout": "row-spread",
-        "style": false,
-        "font": "",
-        "fontSize": 16,
-        "color": "#717171",
-        "wrapText": false,
-        "className": "",
-        "value": "payload.tank_pct",
-        "valueType": "msg",
-        "x": 510,
-        "y": 780,
-        "wires": []
-    },
-    {
-        "id": "8c2ad42b0b20f379",
-        "type": "ui-gauge",
-        "z": "5f797197af0573e8",
-        "name": "Tank-Guage",
-        "group": "2370752e47519434",
-        "order": 3,
-        "value": "payload.tank_pct",
-        "valueType": "msg",
-        "width": 3,
-        "height": 3,
-        "gtype": "gauge-tank",
-        "gstyle": "needle",
-        "title": "",
-        "alwaysShowTitle": false,
-        "floatingTitlePosition": "top-left",
-        "units": "units",
-        "icon": "",
-        "prefix": "",
-        "suffix": "",
-        "segments": [
-            {
-                "from": "0",
-                "color": "#ff0000",
-                "text": "",
-                "textType": "label"
-            },
-            {
-                "from": "25",
-                "color": "#f1c855",
-                "text": "",
-                "textType": "label"
-            },
-            {
-                "from": "50",
-                "color": "#39bc01",
-                "text": "",
-                "textType": "label"
-            },
-            {
-                "from": "100",
-                "color": "#55f174",
-                "text": "",
-                "textType": "label"
-            }
-        ],
-        "min": 0,
-        "max": "100",
-        "sizeThickness": 16,
-        "sizeGap": 4,
-        "sizeKeyThickness": 8,
-        "styleRounded": true,
-        "styleGlow": false,
-        "className": "",
-        "x": 510,
-        "y": 900,
-        "wires": [
-            []
-        ]
-    },
-    {
-        "id": "d7071f671c6b77bf",
-        "type": "ui-text",
-        "z": "5f797197af0573e8",
-        "group": "71ef743c63d44115",
-        "order": 1,
-        "width": 0,
-        "height": 0,
-        "name": "Tank-wifi_ssid",
-        "label": "WiFi SSID",
-        "format": "{{msg.payload}}",
-        "layout": "row-spread",
-        "style": false,
-        "font": "",
-        "fontSize": 16,
-        "color": "#717171",
-        "wrapText": false,
-        "className": "",
-        "value": "payload.wifi_ssid",
-        "valueType": "msg",
-        "x": 520,
-        "y": 980,
-        "wires": []
-    },
-    {
-        "id": "52a1f4593584a855",
-        "type": "mqtt in",
-        "z": "5f797197af0573e8",
-        "name": "",
-        "topic": "waterlevel/+/settings",
-        "qos": "2",
-        "datatype": "auto-detect",
-        "broker": "e0e7eb4b34d557fd",
-        "nl": false,
-        "rap": true,
-        "rh": 0,
-        "inputs": 0,
-        "x": 70,
-        "y": 920,
-        "wires": [
-            [
-                "b4d12e7963917f60"
-            ]
-        ]
-    },
-    {
-        "id": "eee6b85b67def7e2",
-        "type": "ui-text",
-        "z": "5f797197af0573e8",
-        "group": "71ef743c63d44115",
-        "order": 5,
-        "width": 0,
-        "height": 0,
-        "name": "Tank-mqtt_server",
-        "label": "MQQT Server",
-        "format": "{{msg.payload}}",
-        "layout": "row-spread",
-        "style": false,
-        "font": "",
-        "fontSize": 16,
-        "color": "#717171",
-        "wrapText": false,
-        "className": "",
-        "value": "payload.mqtt_server",
-        "valueType": "msg",
-        "x": 530,
-        "y": 1021.6666666666665,
-        "wires": []
-    },
-    {
-        "id": "619c9d95a4f51600",
-        "type": "ui-text",
-        "z": "5f797197af0573e8",
-        "group": "71ef743c63d44115",
-        "order": 4,
-        "width": 0,
-        "height": 0,
-        "name": "Tank-mqtt_port",
-        "label": "MQQT Port",
-        "format": "{{msg.payload}}",
-        "layout": "row-spread",
-        "style": false,
-        "font": "",
-        "fontSize": 16,
-        "color": "#717171",
-        "wrapText": false,
-        "className": "",
-        "value": "payload.mqtt_port",
-        "valueType": "msg",
-        "x": 520,
-        "y": 1063.3333333333333,
-        "wires": []
-    },
-    {
-        "id": "25f61188b24ef496",
-        "type": "ui-text",
-        "z": "5f797197af0573e8",
-        "group": "71ef743c63d44115",
-        "order": 6,
-        "width": 0,
-        "height": 0,
-        "name": "Tank-mqtt_connect_attempts",
-        "label": "MQTT Connect Attempts",
-        "format": "{{msg.payload}}",
-        "layout": "row-spread",
-        "style": false,
-        "font": "",
-        "fontSize": 16,
-        "color": "#717171",
-        "wrapText": false,
-        "className": "",
-        "value": "payload.mqtt_connect_attempts",
-        "valueType": "msg",
-        "x": 560,
-        "y": 1105,
-        "wires": []
-    },
-    {
-        "id": "5da7909ec391c48f",
-        "type": "ui-text",
-        "z": "5f797197af0573e8",
-        "group": "b521720abe928de1",
-        "order": 3,
-        "width": "0",
-        "height": "0",
-        "name": "Tank-device_id",
-        "label": "Device ID",
-        "format": "{{msg.payload}}",
-        "layout": "row-spread",
-        "style": false,
-        "font": "",
-        "fontSize": 16,
-        "color": "#717171",
-        "wrapText": false,
-        "className": "",
-        "value": "payload.device_id",
-        "valueType": "msg",
-        "x": 520,
-        "y": 1146.6666666666665,
-        "wires": []
-    },
-    {
-        "id": "a0a6076334580bee",
-        "type": "ui-text",
-        "z": "5f797197af0573e8",
-        "group": "b521720abe928de1",
-        "order": 6,
-        "width": 0,
-        "height": 0,
-        "name": "Tank-interval_seconds",
-        "label": "Interval (seconds)",
-        "format": "{{msg.payload}}",
-        "layout": "row-spread",
-        "style": false,
-        "font": "",
-        "fontSize": 16,
-        "color": "#717171",
-        "wrapText": false,
-        "className": "",
-        "value": "payload.interval_seconds",
-        "valueType": "msg",
-        "x": 540,
-        "y": 1188.333333333333,
-        "wires": []
-    },
-    {
-        "id": "dc8260f136848f08",
-        "type": "ui-text",
-        "z": "5f797197af0573e8",
-        "group": "b521720abe928de1",
-        "order": 5,
-        "width": 0,
-        "height": 0,
-        "name": "Tank-sensor_offset_cm",
-        "label": "Sensor Offset (cm)",
-        "format": "{{msg.payload}}",
-        "layout": "row-spread",
-        "style": false,
-        "font": "",
-        "fontSize": 16,
-        "color": "#717171",
-        "wrapText": false,
-        "className": "",
-        "value": "payload.sensor_offset_cm",
-        "valueType": "msg",
-        "x": 550,
-        "y": 1220,
-        "wires": []
-    },
-    {
-        "id": "297c263b12ed99c0",
-        "type": "ui-text",
-        "z": "5f797197af0573e8",
-        "group": "b521720abe928de1",
-        "order": 4,
-        "width": 0,
-        "height": 0,
-        "name": "Tank-tank_height_cm",
-        "label": "Tank Height (cm)",
-        "format": "{{msg.payload}}",
-        "layout": "row-spread",
-        "style": false,
-        "font": "",
-        "fontSize": 16,
-        "color": "#717171",
-        "wrapText": false,
-        "className": "",
-        "value": "payload.tank_height_cm",
-        "valueType": "msg",
-        "x": 540,
-        "y": 1271.6666666666665,
-        "wires": []
-    },
-    {
-        "id": "04e9470deba739bd",
-        "type": "ui-text",
-        "z": "5f797197af0573e8",
-        "group": "b521720abe928de1",
-        "order": 9,
-        "width": 0,
-        "height": 0,
-        "name": "Tank-enable_deep_sleep",
-        "label": "Enable Deep Sleep",
-        "format": "{{msg.payload}}",
-        "layout": "row-spread",
-        "style": false,
-        "font": "",
-        "fontSize": 16,
-        "color": "#717171",
-        "wrapText": false,
-        "className": "",
-        "value": "payload.enable_deep_sleep",
-        "valueType": "msg",
-        "x": 550,
-        "y": 1313.333333333333,
-        "wires": []
-    },
-    {
-        "id": "537bdf111dd60bb5",
-        "type": "ui-text",
-        "z": "5f797197af0573e8",
-        "group": "b521720abe928de1",
-        "order": 8,
-        "width": 0,
-        "height": 0,
-        "name": "Tank-production_mode",
-        "label": "Production Mode",
-        "format": "{{msg.payload}}",
-        "layout": "row-spread",
-        "style": false,
-        "font": "",
-        "fontSize": 16,
-        "color": "#717171",
-        "wrapText": false,
-        "className": "",
-        "value": "payload.production_mode",
-        "valueType": "msg",
-        "x": 540,
-        "y": 1354.9999999999995,
-        "wires": []
-    },
-    {
-        "id": "7988b77d5e33a87e",
-        "type": "ui-text",
-        "z": "5f797197af0573e8",
-        "group": "b521720abe928de1",
-        "order": 7,
-        "width": 0,
-        "height": 0,
-        "name": "Tank-log_level",
-        "label": "Log Level",
-        "format": "{{msg.payload}}",
-        "layout": "row-spread",
-        "style": false,
-        "font": "",
-        "fontSize": 16,
-        "color": "#717171",
-        "wrapText": false,
-        "className": "",
-        "value": "payload.log_level",
-        "valueType": "msg",
-        "x": 520,
-        "y": 1396.6666666666663,
-        "wires": []
-    },
-    {
-        "id": "aea61ec1131e342a",
-        "type": "ui-text",
-        "z": "5f797197af0573e8",
-        "group": "71ef743c63d44115",
-        "order": 3,
-        "width": 0,
-        "height": 0,
-        "name": "Tank-ntp_enabled",
-        "label": "NTP Enabled",
-        "format": "{{msg.payload}}",
-        "layout": "row-spread",
-        "style": false,
-        "font": "",
-        "fontSize": 16,
-        "color": "#717171",
-        "wrapText": false,
-        "className": "",
-        "value": "payload.ntp_enabled",
-        "valueType": "msg",
-        "x": 530,
-        "y": 1438.333333333333,
-        "wires": []
-    },
-    {
-        "id": "ea4b3108507529b0",
-        "type": "ui-text",
-        "z": "5f797197af0573e8",
-        "group": "71ef743c63d44115",
-        "order": 2,
-        "width": 0,
-        "height": 0,
-        "name": "Tank-ntp_server",
-        "label": "NTP Server",
-        "format": "{{msg.payload}}",
-        "layout": "row-spread",
-        "style": false,
-        "font": "",
-        "fontSize": 16,
-        "color": "#717171",
-        "wrapText": false,
-        "className": "",
-        "value": "payload.ntp_server",
-        "valueType": "msg",
-        "x": 520,
-        "y": 1480,
-        "wires": []
-    },
-    {
-        "id": "9fbff92d279eb827",
-        "type": "ui-dropdown",
-        "z": "5f797197af0573e8",
-        "group": "2370752e47519434",
-        "name": "Tank Selector",
-        "label": "Select Option:",
-        "tooltip": "",
-        "order": 1,
-        "width": 0,
-        "height": 0,
-        "passthru": true,
-        "multiple": false,
-        "chips": false,
-        "clearable": false,
-        "options": [
-            {
-                "label": "BottomTank-Green",
-                "value": "BottomTank-Green",
-                "type": "str"
-            },
-            {
-                "label": "BottomTank-Red",
-                "value": "BottomTank-Red",
-                "type": "str"
-            }
-        ],
-        "payload": "",
-        "topic": "topic",
-        "topicType": "msg",
-        "className": "",
-        "typeIsComboBox": false,
-        "msgTrigger": "onChange",
-        "x": 800,
-        "y": 480,
-        "wires": [
-            [
-                "e9be1adeeac57c48",
-                "bb0578350c21e7c4",
-                "0b43b557218aa21f",
-                "f82186047ff7b48d"
-            ]
-        ]
-    },
-    {
-        "id": "dc85fa9629950ef1",
-        "type": "function",
-        "z": "5f797197af0573e8",
-        "name": "Set the default tank at startup",
-        "func": "msg.payload = \"BottomTank-Green\"\n\nreturn msg;",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 560,
-        "y": 480,
-        "wires": [
-            [
-                "9fbff92d279eb827"
-            ]
-        ]
-    },
-    {
-        "id": "fc7375853b21e008",
-        "type": "inject",
-        "z": "5f797197af0573e8",
-        "name": "",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": true,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "",
-        "payloadType": "date",
-        "x": 330,
-        "y": 480,
-        "wires": [
-            [
-                "dc85fa9629950ef1"
-            ]
-        ]
-    },
-    {
-        "id": "e9be1adeeac57c48",
-        "type": "function",
-        "z": "5f797197af0573e8",
-        "name": "set CurrentTank global",
-        "func": "global.set(\"CurrentTank\", msg.payload)\n\nmsg.payload = global.get(\"CurrentTank\")\n\nreturn msg;",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 1080,
-        "y": 480,
-        "wires": [
-            [
-                "75176c50bb68930b",
-                "2c9dfccf1fd6ab36"
-            ]
-        ]
-    },
-    {
-        "id": "2c9dfccf1fd6ab36",
-        "type": "function",
-        "z": "5f797197af0573e8",
-        "name": "Request settings for selected tank",
-        "func": "msg.payload = { action: \"refresh\" };\nreturn msg;",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 1260,
-        "y": 520,
-        "wires": [
-            [
-                "40ce15d66ec74834"
-            ]
-        ]
-    },
-    {
-        "id": "0046f598d89b12f1",
-        "type": "ui-text",
-        "z": "5f797197af0573e8",
-        "group": "b521720abe928de1",
-        "order": 1,
-        "width": 0,
-        "height": 0,
-        "name": "Last Update",
-        "label": "Last Update",
-        "format": "{{msg.payload}}",
-        "layout": "row-spread",
-        "style": false,
-        "font": "",
-        "fontSize": 16,
-        "color": "#717171",
-        "wrapText": false,
-        "className": "",
-        "value": "payload",
-        "valueType": "msg",
-        "x": 1130,
-        "y": 360,
-        "wires": []
-    },
-    {
-        "id": "d3a0e90f7d76ed6e",
-        "type": "function",
-        "z": "5f797197af0573e8",
-        "name": "Create date\\time stamp",
-        "func": "var now = new Date();\n\nmsg.payload = now.toLocaleString();\n\nreturn msg;",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 170,
-        "y": 360,
-        "wires": [
-            [
-                "0046f598d89b12f1",
-                "383941ec58ea07e9",
-                "61bb5d003d952467",
-                "97bc7439b8ebdbbb"
-            ]
-        ]
-    },
-    {
-        "id": "75176c50bb68930b",
-        "type": "debug",
-        "z": "5f797197af0573e8",
-        "name": "debug 4",
-        "active": false,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "false",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 1340,
-        "y": 480,
-        "wires": []
-    },
-    {
-        "id": "9700a30986d7815c",
-        "type": "ui-led",
-        "z": "5f797197af0573e8",
-        "name": "Active LED",
-        "group": "2370752e47519434",
-        "order": 2,
-        "width": 0,
-        "height": 0,
-        "label": "Active",
-        "labelPlacement": "left",
-        "labelAlignment": "flex-start",
-        "states": [
-            {
-                "value": "0",
-                "valueType": "num",
-                "color": "#ff0000"
-            },
-            {
-                "value": "1",
-                "valueType": "num",
-                "color": "#ffbb00"
-            },
-            {
-                "value": "2",
-                "valueType": "num",
-                "color": "#82de12"
-            }
-        ],
-        "allowColorForValueInMessage": false,
-        "shape": "circle",
-        "showBorder": false,
-        "showGlow": true,
-        "x": 1230,
-        "y": 180,
-        "wires": []
-    },
-    {
-        "id": "383941ec58ea07e9",
-        "type": "function",
-        "z": "5f797197af0573e8",
-        "name": "Active LED - Amber",
-        "func": "msg.payload = 1\nreturn msg;",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 690,
-        "y": 100,
-        "wires": [
-            [
-                "debfe7600bdd36fe",
-                "f3a6a87bc7a42112",
-                "9700a30986d7815c"
-            ]
-        ]
-    },
-    {
-        "id": "debfe7600bdd36fe",
-        "type": "delay",
-        "z": "5f797197af0573e8",
-        "name": "",
-        "pauseType": "delay",
-        "timeout": "2",
-        "timeoutUnits": "seconds",
-        "rate": "1",
-        "nbRateUnits": "1",
-        "rateUnits": "second",
-        "randomFirst": "1",
-        "randomLast": "5",
-        "randomUnits": "seconds",
-        "drop": false,
-        "allowrate": false,
-        "outputs": 1,
-        "x": 920,
-        "y": 80,
-        "wires": [
-            [
-                "77ab25929c7e36ec"
-            ]
-        ]
-    },
-    {
-        "id": "56ca8408e0eecf12",
-        "type": "function",
-        "z": "5f797197af0573e8",
-        "name": "Active LED Red",
-        "func": "msg.payload = 0\nreturn msg;",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 780,
-        "y": 200,
-        "wires": [
-            [
-                "f3a6a87bc7a42112",
-                "5de531be950434ed"
-            ]
-        ]
-    },
-    {
-        "id": "5de531be950434ed",
-        "type": "delay",
-        "z": "5f797197af0573e8",
-        "name": "",
-        "pauseType": "delay",
-        "timeout": "5",
-        "timeoutUnits": "minutes",
-        "rate": "1",
-        "nbRateUnits": "1",
-        "rateUnits": "second",
-        "randomFirst": "1",
-        "randomLast": "5",
-        "randomUnits": "seconds",
-        "drop": false,
-        "allowrate": false,
-        "outputs": 1,
-        "x": 980,
-        "y": 200,
-        "wires": [
-            [
-                "9700a30986d7815c"
-            ]
-        ]
-    },
-    {
-        "id": "77ab25929c7e36ec",
-        "type": "function",
-        "z": "5f797197af0573e8",
-        "name": "Active LED - Green",
-        "func": "msg.payload = 2\nreturn msg;",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 1110,
-        "y": 80,
-        "wires": [
-            [
-                "9700a30986d7815c"
-            ]
-        ]
-    },
-    {
-        "id": "61bb5d003d952467",
-        "type": "function",
-        "z": "5f797197af0573e8",
-        "name": "function  - Reset the delay node",
-        "func": "msg.reset = true\nreturn msg;",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 730,
-        "y": 260,
-        "wires": [
-            [
-                "5de531be950434ed"
-            ]
-        ]
-    },
-    {
-        "id": "97bc7439b8ebdbbb",
-        "type": "delay",
-        "z": "5f797197af0573e8",
-        "name": "",
-        "pauseType": "delay",
-        "timeout": "1",
-        "timeoutUnits": "seconds",
-        "rate": "1",
-        "nbRateUnits": "1",
-        "rateUnits": "second",
-        "randomFirst": "1",
-        "randomLast": "5",
-        "randomUnits": "seconds",
-        "drop": false,
-        "allowrate": false,
-        "outputs": 1,
-        "x": 660,
-        "y": 140,
-        "wires": [
-            [
-                "56ca8408e0eecf12"
-            ]
-        ]
-    },
-    {
-        "id": "8775e202bba0f12e",
-        "type": "inject",
-        "z": "5f797197af0573e8",
-        "name": "",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": true,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "",
-        "payloadType": "date",
-        "x": 110,
-        "y": 40,
-        "wires": [
-            [
-                "0a7bb33e8fd8072f"
-            ]
-        ]
-    },
-    {
-        "id": "0a7bb33e8fd8072f",
-        "type": "function",
-        "z": "5f797197af0573e8",
-        "name": "function 3",
-        "func": "\nmsg.payload = env.get(\"TZ\");\nreturn msg;\n\n\n\n/*var tz = Intl.DateTimeFormat().resolvedOptions().timeZone;\nvar offset = new Date().getTimezoneOffset();\nvar now = new Date().toString();\n\nmsg.payload = \"Timezone: \" + tz +\n              \" | Offset (min): \" + offset\n\nreturn msg;*/\n\n",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 280,
-        "y": 40,
-        "wires": [
-            [
-                "1cea44faabbbc609"
-            ]
-        ]
-    },
-    {
-        "id": "1cea44faabbbc609",
-        "type": "ui-text",
-        "z": "5f797197af0573e8",
-        "group": "b521720abe928de1",
-        "order": 2,
-        "width": 0,
-        "height": 0,
-        "name": "Timezone",
-        "label": "Timezone",
-        "format": "{{msg.payload}}",
-        "layout": "row-spread",
-        "style": false,
-        "font": "",
-        "fontSize": 16,
-        "color": "#717171",
-        "wrapText": false,
-        "className": "",
-        "value": "payload",
-        "valueType": "msg",
-        "x": 560,
-        "y": 40,
-        "wires": []
-    },
-    {
-        "id": "cfbbb56687fa46c9",
-        "type": "ui-template",
-        "z": "5f797197af0573e8",
-        "group": "23f681f586e541dc",
-        "page": "",
-        "ui": "",
-        "name": "Remote Config Editor",
-        "order": 1,
-        "width": 4,
-        "height": 6,
-        "format": "<template>\n  <div>\n\n    <!-- OPEN BUTTON -->\n    <button\n      @click=\"dialog = true\"\n      style=\"padding:10px; background:#1976d2; color:white; border:none; width:100%;\">\n      Edit Config\n    </button>\n\n    <!-- POPUP -->\n    <div v-if=\"dialog\"\n         style=\"position:fixed; top:0; left:0; right:0; bottom:0;\n                background:rgba(0,0,0,0.5);\n                display:flex;\n                align-items:center;\n                justify-content:center;\n                z-index:9999;\">\n\n      <div style=\"background:white; padding:20px; width:420px; max-height:80vh; overflow:auto;\">\n\n        <h3 style=\"margin-bottom:15px;\">Configuration</h3>\n\n        <!-- SETTINGS LIST -->\n        <div style=\"display:flex; flex-direction:column; gap:12px;\">\n\n          <!-- ROW TEMPLATE -->\n          <div style=\"display:flex; justify-content:space-between; align-items:center;\">\n            <span>Interval (sec)</span>\n            <input type=\"number\" v-model.number=\"form.interval_seconds\" style=\"width:120px;\">\n          </div>\n\n          <div style=\"display:flex; justify-content:space-between; align-items:center;\">\n            <span>Sensor Offset (cm)</span>\n            <input type=\"number\" v-model.number=\"form.sensor_offset_cm\" style=\"width:120px;\">\n          </div>\n\n          <div style=\"display:flex; justify-content:space-between; align-items:center;\">\n            <span>Tank Height (cm)</span>\n            <input type=\"number\" v-model.number=\"form.tank_height_cm\" style=\"width:120px;\">\n          </div>\n\n          <div style=\"display:flex; justify-content:space-between; align-items:center;\">\n            <span>Deep Sleep</span>\n            <input type=\"checkbox\" v-model=\"form.enable_deep_sleep\">\n          </div>\n\n          <div style=\"display:flex; justify-content:space-between; align-items:center;\">\n            <span>Production Mode</span>\n            <input type=\"checkbox\" v-model=\"form.production_mode\">\n          </div>\n\n          <div style=\"display:flex; justify-content:space-between; align-items:center;\">\n            <span>NTP Enabled</span>\n            <input type=\"checkbox\" v-model=\"form.ntp_enabled\">\n          </div>\n\n          <div style=\"display:flex; justify-content:space-between; align-items:center;\">\n            <span>NTP Server</span>\n            <input v-model=\"form.ntp_server\" style=\"width:160px;\">\n          </div>\n\n          <div style=\"display:flex; justify-content:space-between; align-items:center;\">\n            <span>MQTT Attempts</span>\n            <input type=\"number\" v-model.number=\"form.mqtt_connect_attempts\" style=\"width:120px;\">\n          </div>\n\n          <div style=\"display:flex; justify-content:space-between; align-items:center;\">\n            <span>Log Level</span>\n            <select v-model=\"form.log_level\" style=\"width:140px;\">\n              <option :value=\"0\">ERROR</option>\n              <option :value=\"1\">INFO</option>\n              <option :value=\"2\">DEBUG</option>\n            </select>\n          </div>\n\n        </div>\n\n        <!-- BUTTONS -->\n        <div style=\"margin-top:20px; display:flex; gap:10px;\">\n\n          <button\n            @click=\"save\"\n            style=\"flex:1; padding:10px; background:green; color:white; border:none;\">\n            Save\n          </button>\n\n          <button\n            @click=\"dialog=false\"\n            style=\"flex:1; padding:10px; background:grey; color:white; border:none;\">\n            Cancel\n          </button>\n\n        </div>\n\n      </div>\n    </div>\n\n  </div>\n</template>\n\n<script>\nexport default {\n  data(){\n    return {\n      dialog: false,\n      form: {}\n    }\n  },\n\n  watch:{\n    msg:{\n      handler(){\n\n        // ✅ This is what pre-populates from device config\n        if(this.msg && typeof this.msg.payload === \"object\"){\n          this.form = { ...this.msg.payload }\n        }\n\n      },\n      immediate: true\n    }\n  },\n\n  methods:{\n    save(){\n      this.send({ payload: this.form })\n      this.dialog = false\n    }\n  }\n}\n</script>",
-        "storeOutMessages": true,
-        "passthru": true,
-        "templateScope": "local",
-        "className": "",
-        "x": 1220,
-        "y": 620,
-        "wires": [
-            [
-                "40ce15d66ec74834"
-            ]
-        ]
-    },
-    {
-        "id": "40ce15d66ec74834",
-        "type": "function",
-        "z": "5f797197af0573e8",
-        "name": "Build Config",
-        "func": "if (msg.payload && msg.payload.action === \"refresh\") {\n  var tank = global.get(\"CurrentTank\") || \"unknown\";\n  msg.topic = \"waterlevel/\" + tank + \"/config/get\";\n  msg.payload = \"\";\n  return msg;\n}\n\nif (msg.topic && msg.topic.endsWith(\"/config/get\")) {\n  return msg;\n}\n\nvar tank = global.get(\"CurrentTank\") || (msg.payload && msg.payload.device_id) || \"unknown\";\nvar payload = Object.assign({}, msg.payload || {});\n\n[\"enable_deep_sleep\", \"production_mode\", \"ntp_enabled\"].forEach(function (k) {\n  if (typeof payload[k] === \"string\") {\n    var v = payload[k].trim().toLowerCase();\n    if (v === \"true\" || v === \"1\" || v === \"yes\" || v === \"on\") payload[k] = true;\n    if (v === \"false\" || v === \"0\" || v === \"no\" || v === \"off\" || v === \"\") payload[k] = false;\n  }\n});\n\n[\"interval_seconds\", \"mqtt_connect_attempts\", \"log_level\", \"sensor_mode\"].forEach(function (k) {\n  if (typeof payload[k] === \"string\" && payload[k].trim() !== \"\") payload[k] = Number(payload[k]);\n});\n\n[\"sensor_offset_cm\", \"tank_height_cm\"].forEach(function (k) {\n  if (typeof payload[k] === \"string\" && payload[k].trim() !== \"\") payload[k] = parseFloat(payload[k]);\n});\n\nmsg.topic = \"waterlevel/\" + tank + \"/config/set\";\nmsg.payload = JSON.stringify(payload);\nreturn msg;",
-        "outputs": 1,
-        "x": 1230,
-        "y": 680,
-        "wires": [
-            [
-                "dbg_config_set"
-            ]
-        ]
-    },
-    {
-        "id": "5d2d3ebceb454746",
-        "type": "mqtt out",
-        "z": "5f797197af0573e8",
-        "broker": "e0e7eb4b34d557fd",
-        "x": 1230,
-        "y": 740,
-        "wires": []
-    },
-    {
-        "id": "dbg_config_set",
-        "type": "function",
-        "z": "5f797197af0573e8",
-        "name": "Log Config Set",
-        "func": "if (msg.topic && msg.topic.includes(\"/config/set\")) {\n  msg.lastConfigSetPayload = msg.payload;\n  global.set(\"lastConfigSet\", {ts: new Date().toLocaleString(), topic: msg.topic, payload: msg.payload});\n}\nreturn msg;",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 950,
-        "y": 740,
-        "wires": [
-            [
-                "5d2d3ebceb454746",
-                "dbg_config_formatter"
-            ]
-        ]
-    },
-    {
-        "id": "dbg_config_formatter",
-        "type": "function",
-        "z": "5f797197af0573e8",
-        "name": "Format Config Set",
-        "func": "if (typeof msg.payload === 'string') {\n  try {\n    msg.payload = JSON.parse(msg.payload);\n  } catch(e) {}\n}\nmsg.payload = JSON.stringify(msg.payload, null, 2);\nreturn msg;",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 1100,
-        "y": 820,
-        "wires": [
-            [
-                "dbg_config_display"
-            ]
-        ]
-    },
-    {
-        "id": "dbg_config_display",
-        "type": "ui-text",
-        "z": "5f797197af0573e8",
-        "group": "23f681f586e541dc",
-        "order": 4,
-        "width": 4,
-        "height": 3,
-        "name": "Debug: Last Config Set",
-        "label": "Last Config/Set Sent",
-        "format": "{{msg.payload}}",
-        "layout": "row-spread",
-        "style": false,
-        "font": "monospace",
-        "fontSize": 11,
-        "color": "#717171",
-        "wrapText": true,
-        "className": "",
-        "value": "payload",
-        "valueType": "msg",
-        "x": 1240,
-        "y": 820,
-        "wires": []
-    },
-    {
-        "id": "dbg_config_ack_listener",
-        "type": "mqtt in",
-        "z": "5f797197af0573e8",
-        "name": "Config ACK",
-        "topic": "waterlevel/+/config/ack",
-        "qos": 2,
-        "datatype": "json",
-        "broker": "e0e7eb4b34d557fd",
-        "nl": false,
-        "rap": true,
-        "rh": 0,
-        "x": 750,
-        "y": 880,
-        "wires": [
-            [
-                "dbg_config_ack_formatter"
-            ]
-        ]
-    },
-    {
-        "id": "dbg_config_ack_formatter",
-        "type": "function",
-        "z": "5f797197af0573e8",
-        "name": "Format Config Ack",
-        "func": "if (typeof msg.payload === 'object') {\n  msg.payload = JSON.stringify(msg.payload, null, 2);\n}\nreturn msg;",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 1100,
-        "y": 880,
-        "wires": [
-            [
-                "dbg_config_ack_display"
-            ]
-        ]
-    },
-    {
-        "id": "dbg_config_ack_display",
-        "type": "ui-text",
-        "z": "5f797197af0573e8",
-        "group": "23f681f586e541dc",
-        "order": 5,
-        "width": 4,
-        "height": 3,
-        "name": "Debug: Config Responses",
-        "label": "Config/Ack Response",
-        "format": "{{msg.payload}}",
-        "layout": "row-spread",
-        "style": false,
-        "font": "monospace",
-        "fontSize": 11,
-        "color": "#717171",
-        "wrapText": true,
-        "className": "",
-        "value": "payload",
-        "valueType": "msg",
-        "x": 1240,
-        "y": 880,
-        "wires": []
-    },
-    {
-        "id": "dbg_current_settings_listener",
-        "type": "mqtt in",
-        "z": "5f797197af0573e8",
-        "name": "Device Settings",
-        "topic": "waterlevel/+/settings",
-        "qos": 2,
-        "datatype": "json",
-        "broker": "e0e7eb4b34d557fd",
-        "nl": false,
-        "rap": true,
-        "rh": 0,
-        "x": 750,
-        "y": 940,
-        "wires": [
-            [
-                "dbg_current_settings_filter"
-            ]
-        ]
-    },
-    {
-        "id": "dbg_current_settings_filter",
-        "type": "function",
-        "z": "5f797197af0573e8",
-        "name": "Filter by CurrentTank",
-        "func": "if (msg.payload.device_id === global.get(\"CurrentTank\")) {\n  return msg;\n}\nreturn null;",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 1000,
-        "y": 940,
-        "wires": [
-            [
-                "dbg_current_settings_formatter"
-            ]
-        ]
-    },
-    {
-        "id": "dbg_current_settings_formatter",
-        "type": "function",
-        "z": "5f797197af0573e8",
-        "name": "Format Settings",
-        "func": "if (typeof msg.payload === 'object') {\n  msg.payload = JSON.stringify(msg.payload, null, 2);\n}\nreturn msg;",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 1100,
-        "y": 940,
-        "wires": [
-            [
-                "dbg_current_settings_display"
-            ]
-        ]
-    },
-    {
-        "id": "dbg_current_settings_display",
-        "type": "ui-text",
-        "z": "5f797197af0573e8",
-        "group": "23f681f586e541dc",
-        "order": 6,
-        "width": 4,
-        "height": 3,
-        "name": "Debug: Current Device Settings",
-        "label": "Device's Current Settings",
-        "format": "{{msg.payload}}",
-        "layout": "row-spread",
-        "style": false,
-        "font": "monospace",
-        "fontSize": 11,
-        "color": "#717171",
-        "wrapText": true,
-        "className": "",
-        "value": "payload",
-        "valueType": "msg",
-        "x": 1240,
-        "y": 940,
-        "wires": []
-    },
-    {
-        "id": "f4a12c8d77e64f1a",
-        "type": "ui-template",
-        "z": "5f797197af0573e8",
-        "group": "23f681f586e541dc",
-        "page": "",
-        "ui": "",
-        "name": "Refresh Config",
-        "order": 2,
-        "width": 4,
-        "height": 1,
-        "format": "<template>\n  <div>\n    <button @click=\"refresh\" style=\"padding:10px; background:#444; color:white; border:none; width:100%;\">Refresh Config</button>\n  </div>\n</template>\n\n<script>\nexport default {\n  methods: {\n    refresh() {\n      this.send({ payload: { action: 'refresh' } });\n    }\n  }\n}\n</script>",
-        "storeOutMessages": true,
-        "passthru": false,
-        "templateScope": "local",
-        "className": "",
-        "x": 1230,
-        "y": 620,
-        "wires": [
-            [
-                "40ce15d66ec74834"
-            ]
-        ]
-    },
-    {
-        "id": "6d0f6dd09a9e4fb4",
-        "type": "ui-template",
-        "z": "5f797197af0573e8",
-        "group": "23f681f586e541dc",
-        "page": "",
-        "ui": "",
-        "name": "Dashboard Version",
-        "order": 3,
-        "width": 4,
-        "height": 1,
-        "format": "<template>\n  <div style=\"padding:8px 10px; font-size:12px; color:#666; border:1px solid #d8d8d8; border-radius:6px; background:#f7f7f7; text-align:center;\">Dashboard build: 2026-06-23.3</div>\n</template>",
-        "storeOutMessages": false,
-        "passthru": false,
-        "templateScope": "local",
-        "className": "",
-        "x": 1240,
-        "y": 580,
-        "wires": [
-            []
-        ]
-    },
-    {
-        "id": "bb0578350c21e7c4",
-        "type": "function",
-        "z": "5f797197af0573e8",
-        "name": "Active LED Red",
-        "func": "msg.payload = 0\nreturn msg;",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 1220,
-        "y": 420,
-        "wires": [
-            [
-                "9700a30986d7815c"
-            ]
-        ]
-    },
-    {
-        "id": "0b43b557218aa21f",
-        "type": "function",
-        "z": "5f797197af0573e8",
-        "name": "Reset",
-        "func": "msg.payload = {\n    wifi_ssid: \"\",\n    mqtt_server: \"\",\n    mqtt_port: \"\",\n    mqtt_connect_attempts: \"\",\n    device_id: \"\",\n    interval_seconds: \"\",\n    sensor_offset_cm: \"\",\n    tank_height_cm: \"\",\n    enable_deep_sleep: \"\",\n    production_mode: \"\",\n    log_level: \"\",\n    ntp_enabled: \"\",\n    ntp_server: \"\",\n    sensor_mode: \"\",\n    sensor_mode_name: \"\",\n    depth_cm: \"\",\n\n    // telemetry fields (also reset)\n    distance_cm: \"\",\n    battery_v: \"\",\n    battery_pct: \"\",\n    tank_pct: \"\"\n};\n\nreturn msg;\n",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 290,
-        "y": 660,
-        "wires": [
-            [
-                "d7071f671c6b77bf",
-                "eee6b85b67def7e2",
-                "619c9d95a4f51600",
-                "25f61188b24ef496",
-                "5da7909ec391c48f",
-                "a0a6076334580bee",
-                "dc8260f136848f08",
-                "297c263b12ed99c0",
-                "04e9470deba739bd",
-                "537bdf111dd60bb5",
-                "7988b77d5e33a87e",
-                "aea61ec1131e342a",
-                "ea4b3108507529b0",
-                "59701c271655fcd7",
-                "382f44bbc2da4df1",
-                "622767fa66966484",
-                "4f3f707d5289d788",
-                "8c2ad42b0b20f379"
-            ]
-        ]
-    },
-    {
-        "id": "f82186047ff7b48d",
-        "type": "function",
-        "z": "5f797197af0573e8",
-        "name": "function 1",
-        "func": "msg.payload = \"\"\nreturn msg;\n\n    ",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 860,
-        "y": 400,
-        "wires": [
-            [
-                "0046f598d89b12f1"
-            ]
-        ]
-    },
-    {
-        "id": "b4d12e7963917f60",
-        "type": "function",
-        "z": "5f797197af0573e8",
-        "name": "Selected tank filter",
-        "func": "if (msg.payload.device_id == global.get(\"CurrentTank\"))\n{\n    return msg;\n}\n    ",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 310,
-        "y": 960,
-        "wires": [
-            [
-                "dc8260f136848f08",
-                "59701c271655fcd7",
-                "382f44bbc2da4df1",
-                "622767fa66966484",
-                "4f3f707d5289d788",
-                "8c2ad42b0b20f379",
-                "d7071f671c6b77bf",
-                "eee6b85b67def7e2",
-                "619c9d95a4f51600",
-                "25f61188b24ef496",
-                "5da7909ec391c48f",
-                "a0a6076334580bee",
-                "297c263b12ed99c0",
-                "04e9470deba739bd",
-                "537bdf111dd60bb5",
-                "7988b77d5e33a87e",
-                "aea61ec1131e342a",
-                "ea4b3108507529b0",
-                "d3a0e90f7d76ed6e",
-                "cfbbb56687fa46c9"
-            ]
-        ]
-    },
-    {
-        "id": "e0e7eb4b34d557fd",
-        "type": "mqtt-broker",
-        "name": "",
-        "broker": "VMCentos00.ourhome.local",
-        "port": 1883,
-        "clientid": "",
-        "autoConnect": true,
-        "usetls": false,
-        "protocolVersion": 4,
-        "keepalive": 60,
-        "cleansession": true,
-        "autoUnsubscribe": true,
-        "birthTopic": "",
-        "birthQos": "0",
-        "birthRetain": "false",
-        "birthPayload": "",
-        "birthMsg": {},
-        "closeTopic": "",
-        "closeQos": "0",
-        "closeRetain": "false",
-        "closePayload": "",
-        "closeMsg": {},
-        "willTopic": "",
-        "willQos": "0",
-        "willRetain": "false",
-        "willPayload": "",
-        "willMsg": {},
-        "userProps": "",
-        "sessionExpiry": ""
-    },
-    {
-        "id": "2370752e47519434",
-        "type": "ui-group",
-        "name": "Measurement",
-        "page": "6fede73e5ade4075",
-        "width": "3",
-        "height": "3",
-        "order": 1,
-        "showTitle": true,
-        "className": "",
-        "visible": "true",
-        "disabled": "false",
-        "groupType": "default"
-    },
-    {
-        "id": "f0d5e37227e2d9a4",
-        "type": "influxdb",
-        "hostname": "127.0.0.1",
-        "port": 8086,
-        "protocol": "http",
-        "database": "database",
-        "name": "IoT",
-        "usetls": false,
-        "tls": "",
-        "influxdbVersion": "2.0",
-        "url": "http://influxdb:8086",
-        "timeout": 10,
-        "rejectUnauthorized": false
-    },
-    {
-        "id": "71ef743c63d44115",
-        "type": "ui-group",
-        "name": "Network",
-        "page": "6fede73e5ade4075",
-        "width": "3",
-        "height": "3",
-        "order": 3,
-        "showTitle": true,
-        "className": "",
-        "visible": "true",
-        "disabled": "false",
-        "groupType": "default"
-    },
-    {
-        "id": "b521720abe928de1",
-        "type": "ui-group",
-        "name": "Tank Configurations",
-        "page": "6fede73e5ade4075",
-        "width": "3",
-        "height": "3",
-        "order": 2,
-        "showTitle": true,
-        "className": "",
-        "visible": "true",
-        "disabled": "false",
-        "groupType": "default"
-    },
-    {
-        "id": "23f681f586e541dc",
-        "type": "ui-group",
-        "name": "Remote Config",
-        "page": "6fede73e5ade4075",
-        "width": "4",
-        "height": "14",
-        "order": 4,
-        "showTitle": true,
-        "visible": true,
-        "disabled": false
-    },
-    {
-        "id": "6fede73e5ade4075",
-        "type": "ui-page",
-        "name": "Water Tanks",
-        "ui": "1375e23f7655465c",
-        "path": "/Tanks",
-        "icon": "home",
-        "layout": "grid",
-        "theme": "564f86f854625d31",
-        "breakpoints": [
-            {
-                "name": "Default",
-                "px": "0",
-                "cols": "3"
-            },
-            {
-                "name": "Tablet",
-                "px": "576",
-                "cols": "6"
-            },
-            {
-                "name": "Small Desktop",
-                "px": "768",
-                "cols": "9"
-            },
-            {
-                "name": "Desktop",
-                "px": "1024",
-                "cols": "12"
-            }
-        ],
-        "order": 1,
-        "className": "",
-        "visible": "true",
-        "disabled": "false"
-    },
-    {
-        "id": "1375e23f7655465c",
-        "type": "ui-base",
-        "name": "dashboard",
-        "path": "/dashboard",
-        "appIcon": "",
-        "includeClientData": true,
-        "acceptsClientConfig": [
-            "ui-notification",
-            "ui-control"
-        ],
-        "showPathInSidebar": false,
-        "headerContent": "page",
-        "navigationStyle": "default",
-        "titleBarStyle": "default",
-        "showReconnectNotification": true,
-        "notificationDisplayTime": 1,
-        "showDisconnectNotification": true,
-        "allowInstall": false
-    },
-    {
-        "id": "564f86f854625d31",
-        "type": "ui-theme",
-        "name": "Default Theme",
-        "colors": {
-            "surface": "#ffffff",
-            "primary": "#0094ce",
-            "bgPage": "#eeeeee",
-            "groupBg": "#ffffff",
-            "groupOutline": "#cccccc"
-        },
-        "sizes": {
-            "density": "compact",
-            "pagePadding": "5px",
-            "groupGap": "5px",
-            "groupBorderRadius": "4px",
-            "widgetGap": "1px"
-        }
-    },
-    {
-        "id": "661a2e64f9ef9b49",
-        "type": "global-config",
-        "env": [],
-        "modules": {
-            "@flowfuse/node-red-dashboard": "1.30.2",
-            "node-red-contrib-influxdb": "0.7.0",
-            "@flowfuse/node-red-dashboard-2-ui-led": "1.1.0"
-        }
+  {
+    "id": "5f797197af0573e8",
+    "type": "tab",
+    "label": "WaterLevelMetre",
+    "disabled": false,
+    "info": "",
+    "env": []
+  },
+  {
+    "id": "91985e3d7c635738",
+    "type": "debug",
+    "z": "5f797197af0573e8",
+    "name": "debug 1",
+    "active": false,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "targetType": "msg",
+    "statusVal": "",
+    "statusType": "auto",
+    "x": 480,
+    "y": 1720,
+    "wires": []
+  },
+  {
+    "id": "19feed59a75ef3b8",
+    "type": "mqtt in",
+    "z": "5f797197af0573e8",
+    "name": "",
+    "topic": "waterlevel/+/config/ack",
+    "qos": "2",
+    "datatype": "auto-detect",
+    "broker": "e0e7eb4b34d557fd",
+    "nl": false,
+    "rap": true,
+    "rh": 0,
+    "inputs": 0,
+    "x": 170,
+    "y": 1720,
+    "wires": [
+      [
+        "91985e3d7c635738"
+      ]
+    ]
+  },
+  {
+    "id": "d8c8f7d7c6f34f4f",
+    "type": "mqtt in",
+    "z": "5f797197af0573e8",
+    "name": "",
+    "topic": "waterlevel/+/data",
+    "qos": "2",
+    "datatype": "auto-detect",
+    "broker": "e0e7eb4b34d557fd",
+    "nl": false,
+    "rap": true,
+    "rh": 0,
+    "inputs": 0,
+    "x": 70,
+    "y": 420,
+    "wires": [
+      [
+        "d74297f9e9f4e5c2"
+      ]
+    ]
+  },
+  {
+    "id": "f3a6a87bc7a42112",
+    "type": "debug",
+    "z": "5f797197af0573e8",
+    "name": "debug 2",
+    "active": false,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "false",
+    "statusVal": "",
+    "statusType": "auto",
+    "x": 940,
+    "y": 20,
+    "wires": []
+  },
+  {
+    "id": "59701c271655fcd7",
+    "type": "ui-text",
+    "z": "5f797197af0573e8",
+    "group": "2370752e47519434",
+    "order": 4,
+    "width": 0,
+    "height": 0,
+    "name": "Tank-Depth",
+    "label": "Water Depth (cm)",
+    "format": "{{msg.payload}}",
+    "layout": "row-spread",
+    "style": false,
+    "font": "",
+    "fontSize": 16,
+    "color": "#717171",
+    "wrapText": false,
+    "className": "",
+    "value": "payload.depth_cm",
+    "valueType": "msg",
+    "x": 510,
+    "y": 740,
+    "wires": []
+  },
+  {
+    "id": "1ed0fe12e32c825f",
+    "type": "influxdb out",
+    "z": "5f797197af0573e8",
+    "influxdb": "f0d5e37227e2d9a4",
+    "name": "IoT",
+    "measurement": "distance_cm",
+    "precision": "",
+    "retentionPolicy": "",
+    "database": "database",
+    "precisionV18FluxV20": "ms",
+    "retentionPolicyV18Flux": "",
+    "org": "ourhome",
+    "bucket": "WaterTankMetre",
+    "x": 490,
+    "y": 420,
+    "wires": []
+  },
+  {
+    "id": "d74297f9e9f4e5c2",
+    "type": "function",
+    "z": "5f797197af0573e8",
+    "name": "Format MQTT to Influx",
+    "func": "msg.payload = [\n    {\n        distance_cm: msg.payload.distance_cm,\n        battery_v: msg.payload.battery_v,\n        battery_pct: msg.payload.battery_pct\n    },   // fields\n    {\n        device: msg.payload.device_id || global.get(\"CurrentTank\") || \"unknown\"\n    } // tags\n];\nreturn msg;\n",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 300,
+    "y": 420,
+    "wires": [
+      [
+        "1ed0fe12e32c825f"
+      ]
+    ]
+  },
+  {
+    "id": "622767fa66966484",
+    "type": "ui-text",
+    "z": "5f797197af0573e8",
+    "group": "2370752e47519434",
+    "order": 5,
+    "width": 0,
+    "height": 0,
+    "name": "Tank-BatteryV",
+    "label": "Battery (V)",
+    "format": "{{msg.payload}}",
+    "layout": "row-spread",
+    "style": false,
+    "font": "",
+    "fontSize": 16,
+    "color": "#717171",
+    "wrapText": false,
+    "className": "",
+    "value": "payload.battery_v",
+    "valueType": "msg",
+    "x": 520,
+    "y": 820,
+    "wires": []
+  },
+  {
+    "id": "4f3f707d5289d788",
+    "type": "ui-text",
+    "z": "5f797197af0573e8",
+    "group": "2370752e47519434",
+    "order": 6,
+    "width": 0,
+    "height": 0,
+    "name": "Tank-PowerPercentage",
+    "label": "Battery (%)",
+    "format": "{{msg.payload}}",
+    "layout": "row-spread",
+    "style": false,
+    "font": "",
+    "fontSize": 16,
+    "color": "#717171",
+    "wrapText": false,
+    "className": "",
+    "value": "payload.battery_pct",
+    "valueType": "msg",
+    "x": 550,
+    "y": 860,
+    "wires": []
+  },
+  {
+    "id": "382f44bbc2da4df1",
+    "type": "ui-text",
+    "z": "5f797197af0573e8",
+    "group": "2370752e47519434",
+    "order": 7,
+    "width": 0,
+    "height": 0,
+    "name": "Tank-Percent",
+    "label": "Storage (%)",
+    "format": "{{msg.payload}}",
+    "layout": "row-spread",
+    "style": false,
+    "font": "",
+    "fontSize": 16,
+    "color": "#717171",
+    "wrapText": false,
+    "className": "",
+    "value": "payload.tank_pct",
+    "valueType": "msg",
+    "x": 510,
+    "y": 780,
+    "wires": []
+  },
+  {
+    "id": "8c2ad42b0b20f379",
+    "type": "ui-gauge",
+    "z": "5f797197af0573e8",
+    "name": "Tank-Guage",
+    "group": "2370752e47519434",
+    "order": 3,
+    "value": "payload.tank_pct",
+    "valueType": "msg",
+    "width": 3,
+    "height": 3,
+    "gtype": "gauge-tank",
+    "gstyle": "needle",
+    "title": "",
+    "alwaysShowTitle": false,
+    "floatingTitlePosition": "top-left",
+    "units": "units",
+    "icon": "",
+    "prefix": "",
+    "suffix": "",
+    "segments": [
+      {
+        "from": "0",
+        "color": "#ff0000",
+        "text": "",
+        "textType": "label"
+      },
+      {
+        "from": "25",
+        "color": "#f1c855",
+        "text": "",
+        "textType": "label"
+      },
+      {
+        "from": "50",
+        "color": "#39bc01",
+        "text": "",
+        "textType": "label"
+      },
+      {
+        "from": "100",
+        "color": "#55f174",
+        "text": "",
+        "textType": "label"
+      }
+    ],
+    "min": 0,
+    "max": "100",
+    "sizeThickness": 16,
+    "sizeGap": 4,
+    "sizeKeyThickness": 8,
+    "styleRounded": true,
+    "styleGlow": false,
+    "className": "",
+    "x": 510,
+    "y": 900,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "d7071f671c6b77bf",
+    "type": "ui-text",
+    "z": "5f797197af0573e8",
+    "group": "71ef743c63d44115",
+    "order": 1,
+    "width": 0,
+    "height": 0,
+    "name": "Tank-wifi_ssid",
+    "label": "WiFi SSID",
+    "format": "{{msg.payload}}",
+    "layout": "row-spread",
+    "style": false,
+    "font": "",
+    "fontSize": 16,
+    "color": "#717171",
+    "wrapText": false,
+    "className": "",
+    "value": "payload.wifi_ssid",
+    "valueType": "msg",
+    "x": 520,
+    "y": 980,
+    "wires": []
+  },
+  {
+    "id": "52a1f4593584a855",
+    "type": "mqtt in",
+    "z": "5f797197af0573e8",
+    "name": "",
+    "topic": "waterlevel/+/settings",
+    "qos": "2",
+    "datatype": "auto-detect",
+    "broker": "e0e7eb4b34d557fd",
+    "nl": false,
+    "rap": true,
+    "rh": 0,
+    "inputs": 0,
+    "x": 70,
+    "y": 920,
+    "wires": [
+      [
+        "b4d12e7963917f60"
+      ]
+    ]
+  },
+  {
+    "id": "eee6b85b67def7e2",
+    "type": "ui-text",
+    "z": "5f797197af0573e8",
+    "group": "71ef743c63d44115",
+    "order": 5,
+    "width": 0,
+    "height": 0,
+    "name": "Tank-mqtt_server",
+    "label": "MQQT Server",
+    "format": "{{msg.payload}}",
+    "layout": "row-spread",
+    "style": false,
+    "font": "",
+    "fontSize": 16,
+    "color": "#717171",
+    "wrapText": false,
+    "className": "",
+    "value": "payload.mqtt_server",
+    "valueType": "msg",
+    "x": 530,
+    "y": 1021.6666666666665,
+    "wires": []
+  },
+  {
+    "id": "619c9d95a4f51600",
+    "type": "ui-text",
+    "z": "5f797197af0573e8",
+    "group": "71ef743c63d44115",
+    "order": 4,
+    "width": 0,
+    "height": 0,
+    "name": "Tank-mqtt_port",
+    "label": "MQQT Port",
+    "format": "{{msg.payload}}",
+    "layout": "row-spread",
+    "style": false,
+    "font": "",
+    "fontSize": 16,
+    "color": "#717171",
+    "wrapText": false,
+    "className": "",
+    "value": "payload.mqtt_port",
+    "valueType": "msg",
+    "x": 520,
+    "y": 1063.3333333333333,
+    "wires": []
+  },
+  {
+    "id": "25f61188b24ef496",
+    "type": "ui-text",
+    "z": "5f797197af0573e8",
+    "group": "71ef743c63d44115",
+    "order": 6,
+    "width": 0,
+    "height": 0,
+    "name": "Tank-mqtt_connect_attempts",
+    "label": "MQTT Connect Attempts",
+    "format": "{{msg.payload}}",
+    "layout": "row-spread",
+    "style": false,
+    "font": "",
+    "fontSize": 16,
+    "color": "#717171",
+    "wrapText": false,
+    "className": "",
+    "value": "payload.mqtt_connect_attempts",
+    "valueType": "msg",
+    "x": 560,
+    "y": 1105,
+    "wires": []
+  },
+  {
+    "id": "5da7909ec391c48f",
+    "type": "ui-text",
+    "z": "5f797197af0573e8",
+    "group": "b521720abe928de1",
+    "order": 3,
+    "width": "0",
+    "height": "0",
+    "name": "Tank-device_id",
+    "label": "Device ID",
+    "format": "{{msg.payload}}",
+    "layout": "row-spread",
+    "style": false,
+    "font": "",
+    "fontSize": 16,
+    "color": "#717171",
+    "wrapText": false,
+    "className": "",
+    "value": "payload.device_id",
+    "valueType": "msg",
+    "x": 520,
+    "y": 1146.6666666666665,
+    "wires": []
+  },
+  {
+    "id": "a0a6076334580bee",
+    "type": "ui-text",
+    "z": "5f797197af0573e8",
+    "group": "b521720abe928de1",
+    "order": 6,
+    "width": 0,
+    "height": 0,
+    "name": "Tank-interval_seconds",
+    "label": "Interval (seconds)",
+    "format": "{{msg.payload}}",
+    "layout": "row-spread",
+    "style": false,
+    "font": "",
+    "fontSize": 16,
+    "color": "#717171",
+    "wrapText": false,
+    "className": "",
+    "value": "payload.interval_seconds",
+    "valueType": "msg",
+    "x": 540,
+    "y": 1188.333333333333,
+    "wires": []
+  },
+  {
+    "id": "dc8260f136848f08",
+    "type": "ui-text",
+    "z": "5f797197af0573e8",
+    "group": "b521720abe928de1",
+    "order": 5,
+    "width": 0,
+    "height": 0,
+    "name": "Tank-sensor_offset_cm",
+    "label": "Sensor Offset (cm)",
+    "format": "{{msg.payload}}",
+    "layout": "row-spread",
+    "style": false,
+    "font": "",
+    "fontSize": 16,
+    "color": "#717171",
+    "wrapText": false,
+    "className": "",
+    "value": "payload.sensor_offset_cm",
+    "valueType": "msg",
+    "x": 550,
+    "y": 1220,
+    "wires": []
+  },
+  {
+    "id": "297c263b12ed99c0",
+    "type": "ui-text",
+    "z": "5f797197af0573e8",
+    "group": "b521720abe928de1",
+    "order": 4,
+    "width": 0,
+    "height": 0,
+    "name": "Tank-tank_height_cm",
+    "label": "Tank Height (cm)",
+    "format": "{{msg.payload}}",
+    "layout": "row-spread",
+    "style": false,
+    "font": "",
+    "fontSize": 16,
+    "color": "#717171",
+    "wrapText": false,
+    "className": "",
+    "value": "payload.tank_height_cm",
+    "valueType": "msg",
+    "x": 540,
+    "y": 1271.6666666666665,
+    "wires": []
+  },
+  {
+    "id": "04e9470deba739bd",
+    "type": "ui-text",
+    "z": "5f797197af0573e8",
+    "group": "b521720abe928de1",
+    "order": 9,
+    "width": 0,
+    "height": 0,
+    "name": "Tank-enable_deep_sleep",
+    "label": "Enable Deep Sleep",
+    "format": "{{msg.payload}}",
+    "layout": "row-spread",
+    "style": false,
+    "font": "",
+    "fontSize": 16,
+    "color": "#717171",
+    "wrapText": false,
+    "className": "",
+    "value": "payload.enable_deep_sleep",
+    "valueType": "msg",
+    "x": 550,
+    "y": 1313.333333333333,
+    "wires": []
+  },
+  {
+    "id": "537bdf111dd60bb5",
+    "type": "ui-text",
+    "z": "5f797197af0573e8",
+    "group": "b521720abe928de1",
+    "order": 8,
+    "width": 0,
+    "height": 0,
+    "name": "Tank-production_mode",
+    "label": "Production Mode",
+    "format": "{{msg.payload}}",
+    "layout": "row-spread",
+    "style": false,
+    "font": "",
+    "fontSize": 16,
+    "color": "#717171",
+    "wrapText": false,
+    "className": "",
+    "value": "payload.production_mode",
+    "valueType": "msg",
+    "x": 540,
+    "y": 1354.9999999999995,
+    "wires": []
+  },
+  {
+    "id": "7988b77d5e33a87e",
+    "type": "ui-text",
+    "z": "5f797197af0573e8",
+    "group": "b521720abe928de1",
+    "order": 7,
+    "width": 0,
+    "height": 0,
+    "name": "Tank-log_level",
+    "label": "Log Level",
+    "format": "{{msg.payload}}",
+    "layout": "row-spread",
+    "style": false,
+    "font": "",
+    "fontSize": 16,
+    "color": "#717171",
+    "wrapText": false,
+    "className": "",
+    "value": "payload.log_level",
+    "valueType": "msg",
+    "x": 520,
+    "y": 1396.6666666666663,
+    "wires": []
+  },
+  {
+    "id": "aea61ec1131e342a",
+    "type": "ui-text",
+    "z": "5f797197af0573e8",
+    "group": "71ef743c63d44115",
+    "order": 3,
+    "width": 0,
+    "height": 0,
+    "name": "Tank-ntp_enabled",
+    "label": "NTP Enabled",
+    "format": "{{msg.payload}}",
+    "layout": "row-spread",
+    "style": false,
+    "font": "",
+    "fontSize": 16,
+    "color": "#717171",
+    "wrapText": false,
+    "className": "",
+    "value": "payload.ntp_enabled",
+    "valueType": "msg",
+    "x": 530,
+    "y": 1438.333333333333,
+    "wires": []
+  },
+  {
+    "id": "ea4b3108507529b0",
+    "type": "ui-text",
+    "z": "5f797197af0573e8",
+    "group": "71ef743c63d44115",
+    "order": 2,
+    "width": 0,
+    "height": 0,
+    "name": "Tank-ntp_server",
+    "label": "NTP Server",
+    "format": "{{msg.payload}}",
+    "layout": "row-spread",
+    "style": false,
+    "font": "",
+    "fontSize": 16,
+    "color": "#717171",
+    "wrapText": false,
+    "className": "",
+    "value": "payload.ntp_server",
+    "valueType": "msg",
+    "x": 520,
+    "y": 1480,
+    "wires": []
+  },
+  {
+    "id": "9fbff92d279eb827",
+    "type": "ui-dropdown",
+    "z": "5f797197af0573e8",
+    "group": "2370752e47519434",
+    "name": "Tank Selector",
+    "label": "Select Option:",
+    "tooltip": "",
+    "order": 1,
+    "width": 0,
+    "height": 0,
+    "passthru": true,
+    "multiple": false,
+    "chips": false,
+    "clearable": false,
+    "options": [
+      {
+        "label": "BottomTank-Green",
+        "value": "BottomTank-Green",
+        "type": "str"
+      },
+      {
+        "label": "BottomTank-Red",
+        "value": "BottomTank-Red",
+        "type": "str"
+      }
+    ],
+    "payload": "",
+    "topic": "topic",
+    "topicType": "msg",
+    "className": "",
+    "typeIsComboBox": false,
+    "msgTrigger": "onChange",
+    "x": 800,
+    "y": 480,
+    "wires": [
+      [
+        "e9be1adeeac57c48",
+        "bb0578350c21e7c4",
+        "0b43b557218aa21f",
+        "f82186047ff7b48d"
+      ]
+    ]
+  },
+  {
+    "id": "dc85fa9629950ef1",
+    "type": "function",
+    "z": "5f797197af0573e8",
+    "name": "Set the default tank at startup",
+    "func": "msg.payload = \"BottomTank-Green\"\n\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 560,
+    "y": 480,
+    "wires": [
+      [
+        "9fbff92d279eb827"
+      ]
+    ]
+  },
+  {
+    "id": "fc7375853b21e008",
+    "type": "inject",
+    "z": "5f797197af0573e8",
+    "name": "",
+    "props": [
+      {
+        "p": "payload"
+      },
+      {
+        "p": "topic",
+        "vt": "str"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": true,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 330,
+    "y": 480,
+    "wires": [
+      [
+        "dc85fa9629950ef1"
+      ]
+    ]
+  },
+  {
+    "id": "e9be1adeeac57c48",
+    "type": "function",
+    "z": "5f797197af0573e8",
+    "name": "set CurrentTank global",
+    "func": "global.set(\"CurrentTank\", msg.payload)\n\nmsg.payload = global.get(\"CurrentTank\")\n\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1080,
+    "y": 480,
+    "wires": [
+      [
+        "75176c50bb68930b",
+        "2c9dfccf1fd6ab36"
+      ]
+    ]
+  },
+  {
+    "id": "2c9dfccf1fd6ab36",
+    "type": "function",
+    "z": "5f797197af0573e8",
+    "name": "Request settings for selected tank",
+    "func": "msg.payload = { action: \"refresh\" };\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1260,
+    "y": 520,
+    "wires": [
+      [
+        "40ce15d66ec74834"
+      ]
+    ]
+  },
+  {
+    "id": "0046f598d89b12f1",
+    "type": "ui-text",
+    "z": "5f797197af0573e8",
+    "group": "b521720abe928de1",
+    "order": 1,
+    "width": 0,
+    "height": 0,
+    "name": "Last Update",
+    "label": "Last Update",
+    "format": "{{msg.payload}}",
+    "layout": "row-spread",
+    "style": false,
+    "font": "",
+    "fontSize": 16,
+    "color": "#717171",
+    "wrapText": false,
+    "className": "",
+    "value": "payload",
+    "valueType": "msg",
+    "x": 1130,
+    "y": 360,
+    "wires": []
+  },
+  {
+    "id": "d3a0e90f7d76ed6e",
+    "type": "function",
+    "z": "5f797197af0573e8",
+    "name": "Create date\\time stamp",
+    "func": "var now = new Date();\n\nmsg.payload = now.toLocaleString();\n\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 170,
+    "y": 360,
+    "wires": [
+      [
+        "0046f598d89b12f1",
+        "383941ec58ea07e9",
+        "61bb5d003d952467",
+        "97bc7439b8ebdbbb"
+      ]
+    ]
+  },
+  {
+    "id": "75176c50bb68930b",
+    "type": "debug",
+    "z": "5f797197af0573e8",
+    "name": "debug 4",
+    "active": false,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "false",
+    "statusVal": "",
+    "statusType": "auto",
+    "x": 1340,
+    "y": 480,
+    "wires": []
+  },
+  {
+    "id": "9700a30986d7815c",
+    "type": "ui-led",
+    "z": "5f797197af0573e8",
+    "name": "Active LED",
+    "group": "2370752e47519434",
+    "order": 2,
+    "width": 0,
+    "height": 0,
+    "label": "Active",
+    "labelPlacement": "left",
+    "labelAlignment": "flex-start",
+    "states": [
+      {
+        "value": "0",
+        "valueType": "num",
+        "color": "#ff0000"
+      },
+      {
+        "value": "1",
+        "valueType": "num",
+        "color": "#ffbb00"
+      },
+      {
+        "value": "2",
+        "valueType": "num",
+        "color": "#82de12"
+      }
+    ],
+    "allowColorForValueInMessage": false,
+    "shape": "circle",
+    "showBorder": false,
+    "showGlow": true,
+    "x": 1230,
+    "y": 180,
+    "wires": []
+  },
+  {
+    "id": "383941ec58ea07e9",
+    "type": "function",
+    "z": "5f797197af0573e8",
+    "name": "Active LED - Amber",
+    "func": "msg.payload = 1\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 690,
+    "y": 100,
+    "wires": [
+      [
+        "debfe7600bdd36fe",
+        "f3a6a87bc7a42112",
+        "9700a30986d7815c"
+      ]
+    ]
+  },
+  {
+    "id": "debfe7600bdd36fe",
+    "type": "delay",
+    "z": "5f797197af0573e8",
+    "name": "",
+    "pauseType": "delay",
+    "timeout": "2",
+    "timeoutUnits": "seconds",
+    "rate": "1",
+    "nbRateUnits": "1",
+    "rateUnits": "second",
+    "randomFirst": "1",
+    "randomLast": "5",
+    "randomUnits": "seconds",
+    "drop": false,
+    "allowrate": false,
+    "outputs": 1,
+    "x": 920,
+    "y": 80,
+    "wires": [
+      [
+        "77ab25929c7e36ec"
+      ]
+    ]
+  },
+  {
+    "id": "56ca8408e0eecf12",
+    "type": "function",
+    "z": "5f797197af0573e8",
+    "name": "Active LED Red",
+    "func": "msg.payload = 0\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 780,
+    "y": 200,
+    "wires": [
+      [
+        "f3a6a87bc7a42112",
+        "5de531be950434ed"
+      ]
+    ]
+  },
+  {
+    "id": "5de531be950434ed",
+    "type": "delay",
+    "z": "5f797197af0573e8",
+    "name": "",
+    "pauseType": "delay",
+    "timeout": "5",
+    "timeoutUnits": "minutes",
+    "rate": "1",
+    "nbRateUnits": "1",
+    "rateUnits": "second",
+    "randomFirst": "1",
+    "randomLast": "5",
+    "randomUnits": "seconds",
+    "drop": false,
+    "allowrate": false,
+    "outputs": 1,
+    "x": 980,
+    "y": 200,
+    "wires": [
+      [
+        "9700a30986d7815c"
+      ]
+    ]
+  },
+  {
+    "id": "77ab25929c7e36ec",
+    "type": "function",
+    "z": "5f797197af0573e8",
+    "name": "Active LED - Green",
+    "func": "msg.payload = 2\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1110,
+    "y": 80,
+    "wires": [
+      [
+        "9700a30986d7815c"
+      ]
+    ]
+  },
+  {
+    "id": "61bb5d003d952467",
+    "type": "function",
+    "z": "5f797197af0573e8",
+    "name": "function  - Reset the delay node",
+    "func": "msg.reset = true\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 730,
+    "y": 260,
+    "wires": [
+      [
+        "5de531be950434ed"
+      ]
+    ]
+  },
+  {
+    "id": "97bc7439b8ebdbbb",
+    "type": "delay",
+    "z": "5f797197af0573e8",
+    "name": "",
+    "pauseType": "delay",
+    "timeout": "1",
+    "timeoutUnits": "seconds",
+    "rate": "1",
+    "nbRateUnits": "1",
+    "rateUnits": "second",
+    "randomFirst": "1",
+    "randomLast": "5",
+    "randomUnits": "seconds",
+    "drop": false,
+    "allowrate": false,
+    "outputs": 1,
+    "x": 660,
+    "y": 140,
+    "wires": [
+      [
+        "56ca8408e0eecf12"
+      ]
+    ]
+  },
+  {
+    "id": "8775e202bba0f12e",
+    "type": "inject",
+    "z": "5f797197af0573e8",
+    "name": "",
+    "props": [
+      {
+        "p": "payload"
+      },
+      {
+        "p": "topic",
+        "vt": "str"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": true,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 110,
+    "y": 40,
+    "wires": [
+      [
+        "0a7bb33e8fd8072f"
+      ]
+    ]
+  },
+  {
+    "id": "0a7bb33e8fd8072f",
+    "type": "function",
+    "z": "5f797197af0573e8",
+    "name": "function 3",
+    "func": "\nmsg.payload = env.get(\"TZ\");\nreturn msg;\n\n\n\n/*var tz = Intl.DateTimeFormat().resolvedOptions().timeZone;\nvar offset = new Date().getTimezoneOffset();\nvar now = new Date().toString();\n\nmsg.payload = \"Timezone: \" + tz +\n              \" | Offset (min): \" + offset\n\nreturn msg;*/\n\n",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 280,
+    "y": 40,
+    "wires": [
+      [
+        "1cea44faabbbc609"
+      ]
+    ]
+  },
+  {
+    "id": "1cea44faabbbc609",
+    "type": "ui-text",
+    "z": "5f797197af0573e8",
+    "group": "b521720abe928de1",
+    "order": 2,
+    "width": 0,
+    "height": 0,
+    "name": "Timezone",
+    "label": "Timezone",
+    "format": "{{msg.payload}}",
+    "layout": "row-spread",
+    "style": false,
+    "font": "",
+    "fontSize": 16,
+    "color": "#717171",
+    "wrapText": false,
+    "className": "",
+    "value": "payload",
+    "valueType": "msg",
+    "x": 560,
+    "y": 40,
+    "wires": []
+  },
+  {
+    "id": "cfbbb56687fa46c9",
+    "type": "ui-template",
+    "z": "5f797197af0573e8",
+    "group": "23f681f586e541dc",
+    "page": "",
+    "ui": "",
+    "name": "Remote Config Editor",
+    "order": 1,
+    "width": 4,
+    "height": 6,
+    "format": "<template>\n  <div>\n\n    <!-- OPEN BUTTON -->\n    <button\n      @click=\"dialog = true\"\n      style=\"padding:10px; background:#1976d2; color:white; border:none; width:100%;\">\n      Edit Config\n    </button>\n\n    <!-- POPUP -->\n    <div v-if=\"dialog\"\n         style=\"position:fixed; top:0; left:0; right:0; bottom:0;\n                background:rgba(0,0,0,0.5);\n                display:flex;\n                align-items:center;\n                justify-content:center;\n                z-index:9999;\">\n\n      <div style=\"background:white; padding:20px; width:420px; max-height:80vh; overflow:auto;\">\n\n        <h3 style=\"margin-bottom:15px;\">Configuration</h3>\n\n        <!-- SETTINGS LIST -->\n        <div style=\"display:flex; flex-direction:column; gap:12px;\">\n\n          <!-- ROW TEMPLATE -->\n          <div style=\"display:flex; justify-content:space-between; align-items:center;\">\n            <span>Interval (sec)</span>\n            <input type=\"number\" v-model.number=\"form.interval_seconds\" style=\"width:120px;\">\n          </div>\n\n          <div style=\"display:flex; justify-content:space-between; align-items:center;\">\n            <span>Sensor Offset (cm)</span>\n            <input type=\"number\" v-model.number=\"form.sensor_offset_cm\" style=\"width:120px;\">\n          </div>\n\n          <div style=\"display:flex; justify-content:space-between; align-items:center;\">\n            <span>Tank Height (cm)</span>\n            <input type=\"number\" v-model.number=\"form.tank_height_cm\" style=\"width:120px;\">\n          </div>\n\n          <div style=\"display:flex; justify-content:space-between; align-items:center;\">\n            <span>Deep Sleep</span>\n            <input type=\"checkbox\" v-model=\"form.enable_deep_sleep\">\n          </div>\n\n          <div style=\"display:flex; justify-content:space-between; align-items:center;\">\n            <span>Production Mode</span>\n            <input type=\"checkbox\" v-model=\"form.production_mode\">\n          </div>\n\n          <div style=\"display:flex; justify-content:space-between; align-items:center;\">\n            <span>NTP Enabled</span>\n            <input type=\"checkbox\" v-model=\"form.ntp_enabled\">\n          </div>\n\n          <div style=\"display:flex; justify-content:space-between; align-items:center;\">\n            <span>NTP Server</span>\n            <input v-model=\"form.ntp_server\" style=\"width:160px;\">\n          </div>\n\n          <div style=\"display:flex; justify-content:space-between; align-items:center;\">\n            <span>MQTT Attempts</span>\n            <input type=\"number\" v-model.number=\"form.mqtt_connect_attempts\" style=\"width:120px;\">\n          </div>\n\n          <div style=\"display:flex; justify-content:space-between; align-items:center;\">\n            <span>Log Level</span>\n            <select v-model=\"form.log_level\" style=\"width:140px;\">\n              <option :value=\"0\">ERROR</option>\n              <option :value=\"1\">INFO</option>\n              <option :value=\"2\">DEBUG</option>\n            </select>\n          </div>\n\n        </div>\n\n        <!-- BUTTONS -->\n        <div style=\"margin-top:20px; display:flex; gap:10px;\">\n\n          <button\n            @click=\"save\"\n            style=\"flex:1; padding:10px; background:green; color:white; border:none;\">\n            Save\n          </button>\n\n          <button\n            @click=\"dialog=false\"\n            style=\"flex:1; padding:10px; background:grey; color:white; border:none;\">\n            Cancel\n          </button>\n\n        </div>\n\n      </div>\n    </div>\n\n  </div>\n</template>\n\n<script>\nexport default {\n  data(){\n    return {\n      dialog: false,\n      form: {}\n    }\n  },\n\n  watch:{\n    msg:{\n      handler(){\n\n        // ✅ This is what pre-populates from device config\n        if(this.msg && typeof this.msg.payload === \"object\"){\n          this.form = { ...this.msg.payload }\n        }\n\n      },\n      immediate: true\n    }\n  },\n\n  methods:{\n    save(){\n      this.send({ payload: this.form, action: \"save\" })\n      this.dialog = false\n    }\n  }\n}\n</script>",
+    "storeOutMessages": true,
+    "passthru": false,
+    "templateScope": "local",
+    "className": "",
+    "x": 1220,
+    "y": 620,
+    "wires": [
+      [
+        "40ce15d66ec74834"
+      ]
+    ]
+  },
+  {
+    "id": "40ce15d66ec74834",
+    "type": "function",
+    "z": "5f797197af0573e8",
+    "name": "Build Config",
+    "func": "if (msg.payload && msg.payload.action === \"refresh\") {\n  var tank = global.get(\"CurrentTank\") || \"unknown\";\n  msg.topic = \"waterlevel/\" + tank + \"/config/get\";\n  msg.payload = \"\";\n  return msg;\n}\n\nif (msg.topic && msg.topic.endsWith(\"/config/get\")) {\n  return msg;\n}\n\n// Prevent feedback loops: only explicit Save action may publish config/set.\nif (!msg.payload || msg.payload.action !== \"save\") {\n  return null;\n}\n\nvar tank = global.get(\"CurrentTank\") || (msg.payload && msg.payload.device_id) || \"unknown\";\nvar payload = Object.assign({}, msg.payload || {});\ndelete payload.action;\n\n[\"enable_deep_sleep\", \"production_mode\", \"ntp_enabled\"].forEach(function (k) {\n  if (typeof payload[k] === \"string\") {\n    var v = payload[k].trim().toLowerCase();\n    if (v === \"true\" || v === \"1\" || v === \"yes\" || v === \"on\") payload[k] = true;\n    if (v === \"false\" || v === \"0\" || v === \"no\" || v === \"off\" || v === \"\") payload[k] = false;\n  }\n});\n\n[\"interval_seconds\", \"mqtt_connect_attempts\", \"log_level\", \"sensor_mode\"].forEach(function (k) {\n  if (typeof payload[k] === \"string\" && payload[k].trim() !== \"\") payload[k] = Number(payload[k]);\n});\n\n[\"sensor_offset_cm\", \"tank_height_cm\"].forEach(function (k) {\n  if (typeof payload[k] === \"string\" && payload[k].trim() !== \"\") payload[k] = parseFloat(payload[k]);\n});\n\nmsg.topic = \"waterlevel/\" + tank + \"/config/set\";\nmsg.payload = JSON.stringify(payload);\nreturn msg;",
+    "outputs": 1,
+    "x": 1230,
+    "y": 680,
+    "wires": [
+      [
+        "dbg_config_set"
+      ]
+    ]
+  },
+  {
+    "id": "5d2d3ebceb454746",
+    "type": "mqtt out",
+    "z": "5f797197af0573e8",
+    "broker": "e0e7eb4b34d557fd",
+    "x": 1230,
+    "y": 740,
+    "wires": []
+  },
+  {
+    "id": "dbg_config_set",
+    "type": "function",
+    "z": "5f797197af0573e8",
+    "name": "Log Config Set",
+    "func": "if (msg.topic && msg.topic.includes(\"/config/set\")) {\n  msg.lastConfigSetPayload = msg.payload;\n  global.set(\"lastConfigSet\", {ts: new Date().toLocaleString(), topic: msg.topic, payload: msg.payload});\n}\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 950,
+    "y": 740,
+    "wires": [
+      [
+        "5d2d3ebceb454746",
+        "dbg_config_formatter"
+      ]
+    ]
+  },
+  {
+    "id": "dbg_config_formatter",
+    "type": "function",
+    "z": "5f797197af0573e8",
+    "name": "Format Config Set",
+    "func": "if (typeof msg.payload === 'string') {\n  try {\n    msg.payload = JSON.parse(msg.payload);\n  } catch(e) {}\n}\nmsg.payload = JSON.stringify(msg.payload, null, 2);\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1100,
+    "y": 820,
+    "wires": [
+      [
+        "dbg_config_display"
+      ]
+    ]
+  },
+  {
+    "id": "dbg_config_display",
+    "type": "ui-text",
+    "z": "5f797197af0573e8",
+    "group": "23f681f586e541dc",
+    "order": 4,
+    "width": 4,
+    "height": 3,
+    "name": "Debug: Last Config Set",
+    "label": "Last Config/Set Sent",
+    "format": "{{msg.payload}}",
+    "layout": "row-spread",
+    "style": false,
+    "font": "monospace",
+    "fontSize": 11,
+    "color": "#717171",
+    "wrapText": true,
+    "className": "",
+    "value": "payload",
+    "valueType": "msg",
+    "x": 1240,
+    "y": 820,
+    "wires": []
+  },
+  {
+    "id": "dbg_config_ack_listener",
+    "type": "mqtt in",
+    "z": "5f797197af0573e8",
+    "name": "Config ACK",
+    "topic": "waterlevel/+/config/ack",
+    "qos": 2,
+    "datatype": "json",
+    "broker": "e0e7eb4b34d557fd",
+    "nl": false,
+    "rap": true,
+    "rh": 0,
+    "x": 750,
+    "y": 880,
+    "wires": [
+      [
+        "dbg_config_ack_formatter"
+      ]
+    ]
+  },
+  {
+    "id": "dbg_config_ack_formatter",
+    "type": "function",
+    "z": "5f797197af0573e8",
+    "name": "Format Config Ack",
+    "func": "if (typeof msg.payload === 'object') {\n  msg.payload = JSON.stringify(msg.payload, null, 2);\n}\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1100,
+    "y": 880,
+    "wires": [
+      [
+        "dbg_config_ack_display"
+      ]
+    ]
+  },
+  {
+    "id": "dbg_config_ack_display",
+    "type": "ui-text",
+    "z": "5f797197af0573e8",
+    "group": "23f681f586e541dc",
+    "order": 5,
+    "width": 4,
+    "height": 3,
+    "name": "Debug: Config Responses",
+    "label": "Config/Ack Response",
+    "format": "{{msg.payload}}",
+    "layout": "row-spread",
+    "style": false,
+    "font": "monospace",
+    "fontSize": 11,
+    "color": "#717171",
+    "wrapText": true,
+    "className": "",
+    "value": "payload",
+    "valueType": "msg",
+    "x": 1240,
+    "y": 880,
+    "wires": []
+  },
+  {
+    "id": "dbg_current_settings_listener",
+    "type": "mqtt in",
+    "z": "5f797197af0573e8",
+    "name": "Device Settings",
+    "topic": "waterlevel/+/settings",
+    "qos": 2,
+    "datatype": "json",
+    "broker": "e0e7eb4b34d557fd",
+    "nl": false,
+    "rap": true,
+    "rh": 0,
+    "x": 750,
+    "y": 940,
+    "wires": [
+      [
+        "dbg_current_settings_filter"
+      ]
+    ]
+  },
+  {
+    "id": "dbg_current_settings_filter",
+    "type": "function",
+    "z": "5f797197af0573e8",
+    "name": "Filter by CurrentTank",
+    "func": "if (msg.payload.device_id === global.get(\"CurrentTank\")) {\n  return msg;\n}\nreturn null;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1000,
+    "y": 940,
+    "wires": [
+      [
+        "dbg_current_settings_formatter"
+      ]
+    ]
+  },
+  {
+    "id": "dbg_current_settings_formatter",
+    "type": "function",
+    "z": "5f797197af0573e8",
+    "name": "Format Settings",
+    "func": "if (typeof msg.payload === 'object') {\n  msg.payload = JSON.stringify(msg.payload, null, 2);\n}\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1100,
+    "y": 940,
+    "wires": [
+      [
+        "dbg_current_settings_display"
+      ]
+    ]
+  },
+  {
+    "id": "dbg_current_settings_display",
+    "type": "ui-text",
+    "z": "5f797197af0573e8",
+    "group": "23f681f586e541dc",
+    "order": 6,
+    "width": 4,
+    "height": 3,
+    "name": "Debug: Current Device Settings",
+    "label": "Device's Current Settings",
+    "format": "{{msg.payload}}",
+    "layout": "row-spread",
+    "style": false,
+    "font": "monospace",
+    "fontSize": 11,
+    "color": "#717171",
+    "wrapText": true,
+    "className": "",
+    "value": "payload",
+    "valueType": "msg",
+    "x": 1240,
+    "y": 940,
+    "wires": []
+  },
+  {
+    "id": "f4a12c8d77e64f1a",
+    "type": "ui-template",
+    "z": "5f797197af0573e8",
+    "group": "23f681f586e541dc",
+    "page": "",
+    "ui": "",
+    "name": "Refresh Config",
+    "order": 2,
+    "width": 4,
+    "height": 1,
+    "format": "<template>\n  <div>\n    <button @click=\"refresh\" style=\"padding:10px; background:#444; color:white; border:none; width:100%;\">Refresh Config</button>\n  </div>\n</template>\n\n<script>\nexport default {\n  methods: {\n    refresh() {\n      this.send({ payload: { action: 'refresh' } });\n    }\n  }\n}\n</script>",
+    "storeOutMessages": true,
+    "passthru": false,
+    "templateScope": "local",
+    "className": "",
+    "x": 1230,
+    "y": 620,
+    "wires": [
+      [
+        "40ce15d66ec74834"
+      ]
+    ]
+  },
+  {
+    "id": "6d0f6dd09a9e4fb4",
+    "type": "ui-template",
+    "z": "5f797197af0573e8",
+    "group": "23f681f586e541dc",
+    "page": "",
+    "ui": "",
+    "name": "Dashboard Version",
+    "order": 3,
+    "width": 4,
+    "height": 1,
+    "format": "<template>\n  <div style=\"padding:8px 10px; font-size:12px; color:#666; border:1px solid #d8d8d8; border-radius:6px; background:#f7f7f7; text-align:center;\">Dashboard build: 2026-06-23.3</div>\n</template>",
+    "storeOutMessages": false,
+    "passthru": false,
+    "templateScope": "local",
+    "className": "",
+    "x": 1240,
+    "y": 580,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "bb0578350c21e7c4",
+    "type": "function",
+    "z": "5f797197af0573e8",
+    "name": "Active LED Red",
+    "func": "msg.payload = 0\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1220,
+    "y": 420,
+    "wires": [
+      [
+        "9700a30986d7815c"
+      ]
+    ]
+  },
+  {
+    "id": "0b43b557218aa21f",
+    "type": "function",
+    "z": "5f797197af0573e8",
+    "name": "Reset",
+    "func": "msg.payload = {\n    wifi_ssid: \"\",\n    mqtt_server: \"\",\n    mqtt_port: \"\",\n    mqtt_connect_attempts: \"\",\n    device_id: \"\",\n    interval_seconds: \"\",\n    sensor_offset_cm: \"\",\n    tank_height_cm: \"\",\n    enable_deep_sleep: \"\",\n    production_mode: \"\",\n    log_level: \"\",\n    ntp_enabled: \"\",\n    ntp_server: \"\",\n    sensor_mode: \"\",\n    sensor_mode_name: \"\",\n    depth_cm: \"\",\n\n    // telemetry fields (also reset)\n    distance_cm: \"\",\n    battery_v: \"\",\n    battery_pct: \"\",\n    tank_pct: \"\"\n};\n\nreturn msg;\n",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 290,
+    "y": 660,
+    "wires": [
+      [
+        "d7071f671c6b77bf",
+        "eee6b85b67def7e2",
+        "619c9d95a4f51600",
+        "25f61188b24ef496",
+        "5da7909ec391c48f",
+        "a0a6076334580bee",
+        "dc8260f136848f08",
+        "297c263b12ed99c0",
+        "04e9470deba739bd",
+        "537bdf111dd60bb5",
+        "7988b77d5e33a87e",
+        "aea61ec1131e342a",
+        "ea4b3108507529b0",
+        "59701c271655fcd7",
+        "382f44bbc2da4df1",
+        "622767fa66966484",
+        "4f3f707d5289d788",
+        "8c2ad42b0b20f379"
+      ]
+    ]
+  },
+  {
+    "id": "f82186047ff7b48d",
+    "type": "function",
+    "z": "5f797197af0573e8",
+    "name": "function 1",
+    "func": "msg.payload = \"\"\nreturn msg;\n\n    ",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 860,
+    "y": 400,
+    "wires": [
+      [
+        "0046f598d89b12f1"
+      ]
+    ]
+  },
+  {
+    "id": "b4d12e7963917f60",
+    "type": "function",
+    "z": "5f797197af0573e8",
+    "name": "Selected tank filter",
+    "func": "if (msg.payload.device_id == global.get(\"CurrentTank\"))\n{\n    return msg;\n}\n    ",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 310,
+    "y": 960,
+    "wires": [
+      [
+        "dc8260f136848f08",
+        "59701c271655fcd7",
+        "382f44bbc2da4df1",
+        "622767fa66966484",
+        "4f3f707d5289d788",
+        "8c2ad42b0b20f379",
+        "d7071f671c6b77bf",
+        "eee6b85b67def7e2",
+        "619c9d95a4f51600",
+        "25f61188b24ef496",
+        "5da7909ec391c48f",
+        "a0a6076334580bee",
+        "297c263b12ed99c0",
+        "04e9470deba739bd",
+        "537bdf111dd60bb5",
+        "7988b77d5e33a87e",
+        "aea61ec1131e342a",
+        "ea4b3108507529b0",
+        "d3a0e90f7d76ed6e",
+        "cfbbb56687fa46c9"
+      ]
+    ]
+  },
+  {
+    "id": "e0e7eb4b34d557fd",
+    "type": "mqtt-broker",
+    "name": "",
+    "broker": "VMCentos00.ourhome.local",
+    "port": 1883,
+    "clientid": "",
+    "autoConnect": true,
+    "usetls": false,
+    "protocolVersion": 4,
+    "keepalive": 60,
+    "cleansession": true,
+    "autoUnsubscribe": true,
+    "birthTopic": "",
+    "birthQos": "0",
+    "birthRetain": "false",
+    "birthPayload": "",
+    "birthMsg": {},
+    "closeTopic": "",
+    "closeQos": "0",
+    "closeRetain": "false",
+    "closePayload": "",
+    "closeMsg": {},
+    "willTopic": "",
+    "willQos": "0",
+    "willRetain": "false",
+    "willPayload": "",
+    "willMsg": {},
+    "userProps": "",
+    "sessionExpiry": ""
+  },
+  {
+    "id": "2370752e47519434",
+    "type": "ui-group",
+    "name": "Measurement",
+    "page": "6fede73e5ade4075",
+    "width": "3",
+    "height": "3",
+    "order": 1,
+    "showTitle": true,
+    "className": "",
+    "visible": "true",
+    "disabled": "false",
+    "groupType": "default"
+  },
+  {
+    "id": "f0d5e37227e2d9a4",
+    "type": "influxdb",
+    "hostname": "127.0.0.1",
+    "port": 8086,
+    "protocol": "http",
+    "database": "database",
+    "name": "IoT",
+    "usetls": false,
+    "tls": "",
+    "influxdbVersion": "2.0",
+    "url": "http://influxdb:8086",
+    "timeout": 10,
+    "rejectUnauthorized": false
+  },
+  {
+    "id": "71ef743c63d44115",
+    "type": "ui-group",
+    "name": "Network",
+    "page": "6fede73e5ade4075",
+    "width": "3",
+    "height": "3",
+    "order": 3,
+    "showTitle": true,
+    "className": "",
+    "visible": "true",
+    "disabled": "false",
+    "groupType": "default"
+  },
+  {
+    "id": "b521720abe928de1",
+    "type": "ui-group",
+    "name": "Tank Configurations",
+    "page": "6fede73e5ade4075",
+    "width": "3",
+    "height": "3",
+    "order": 2,
+    "showTitle": true,
+    "className": "",
+    "visible": "true",
+    "disabled": "false",
+    "groupType": "default"
+  },
+  {
+    "id": "23f681f586e541dc",
+    "type": "ui-group",
+    "name": "Remote Config",
+    "page": "6fede73e5ade4075",
+    "width": "4",
+    "height": "14",
+    "order": 4,
+    "showTitle": true,
+    "visible": true,
+    "disabled": false
+  },
+  {
+    "id": "6fede73e5ade4075",
+    "type": "ui-page",
+    "name": "Water Tanks",
+    "ui": "1375e23f7655465c",
+    "path": "/Tanks",
+    "icon": "home",
+    "layout": "grid",
+    "theme": "564f86f854625d31",
+    "breakpoints": [
+      {
+        "name": "Default",
+        "px": "0",
+        "cols": "3"
+      },
+      {
+        "name": "Tablet",
+        "px": "576",
+        "cols": "6"
+      },
+      {
+        "name": "Small Desktop",
+        "px": "768",
+        "cols": "9"
+      },
+      {
+        "name": "Desktop",
+        "px": "1024",
+        "cols": "12"
+      }
+    ],
+    "order": 1,
+    "className": "",
+    "visible": "true",
+    "disabled": "false"
+  },
+  {
+    "id": "1375e23f7655465c",
+    "type": "ui-base",
+    "name": "dashboard",
+    "path": "/dashboard",
+    "appIcon": "",
+    "includeClientData": true,
+    "acceptsClientConfig": [
+      "ui-notification",
+      "ui-control"
+    ],
+    "showPathInSidebar": false,
+    "headerContent": "page",
+    "navigationStyle": "default",
+    "titleBarStyle": "default",
+    "showReconnectNotification": true,
+    "notificationDisplayTime": 1,
+    "showDisconnectNotification": true,
+    "allowInstall": false
+  },
+  {
+    "id": "564f86f854625d31",
+    "type": "ui-theme",
+    "name": "Default Theme",
+    "colors": {
+      "surface": "#ffffff",
+      "primary": "#0094ce",
+      "bgPage": "#eeeeee",
+      "groupBg": "#ffffff",
+      "groupOutline": "#cccccc"
+    },
+    "sizes": {
+      "density": "compact",
+      "pagePadding": "5px",
+      "groupGap": "5px",
+      "groupBorderRadius": "4px",
+      "widgetGap": "1px"
     }
+  },
+  {
+    "id": "661a2e64f9ef9b49",
+    "type": "global-config",
+    "env": [],
+    "modules": {
+      "@flowfuse/node-red-dashboard": "1.30.2",
+      "node-red-contrib-influxdb": "0.7.0",
+      "@flowfuse/node-red-dashboard-2-ui-led": "1.1.0"
+    }
+  }
 ]
