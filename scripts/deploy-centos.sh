@@ -4,6 +4,34 @@ set -euo pipefail
 REPO_DIR="${1:-$HOME/WaterLevelMetre}"
 BRANCH="${2:-main}"
 TARGET_NAME="${3:-nodered}"
+CONTAINER_PROJECT_DIR="${4:-/data/projects/$(basename "${REPO_DIR}")}"
+
+repo_update_cmd() {
+	local branch="$1"
+	cat <<EOF
+set -euo pipefail
+git fetch origin "${branch}"
+git checkout "${branch}"
+git pull --ff-only origin "${branch}"
+EOF
+}
+
+update_container_project() {
+	local runtime="$1"
+	local target_name="$2"
+	local branch="$3"
+	local project_dir="$4"
+	local script
+
+	if ! sudo "${runtime}" exec "${target_name}" sh -lc "test -d '${project_dir}'"; then
+		return 1
+	fi
+
+	echo "[deploy] updating ${runtime} project: ${project_dir}"
+	script=$(repo_update_cmd "${branch}")
+	sudo "${runtime}" exec "${target_name}" sh -lc "cd '${project_dir}' && ${script}"
+	return 0
+}
 
 restart_target() {
 	local target_name="$1"
@@ -34,6 +62,29 @@ restart_target() {
 	return 1
 }
 
+update_active_project() {
+	local branch="$1"
+	local target_name="$2"
+	local project_dir="$3"
+
+	if command -v docker >/dev/null 2>&1 && sudo docker ps -a --format '{{.Names}}' | grep -Fxq "${target_name}"; then
+		if update_container_project docker "${target_name}" "${branch}" "${project_dir}"; then
+			return 0
+		fi
+	fi
+
+	if command -v podman >/dev/null 2>&1 && sudo podman ps -a --format '{{.Names}}' | grep -Fxq "${target_name}"; then
+		if update_container_project podman "${target_name}" "${branch}" "${project_dir}"; then
+			return 0
+		fi
+	fi
+
+	echo "[deploy] updating host repository checkout"
+	git fetch origin "${BRANCH}"
+	git checkout "${BRANCH}"
+	git pull --ff-only origin "${BRANCH}"
+}
+
 # Some shells/users accidentally pass a domain-qualified path like:
 #   /home/user@domain.local/WaterLevelMetre
 # Convert that to the actual local home path:
@@ -60,6 +111,7 @@ fi
 echo "[deploy] repo: ${REPO_DIR}"
 echo "[deploy] branch: ${BRANCH}"
 echo "[deploy] target: ${TARGET_NAME}"
+echo "[deploy] container project: ${CONTAINER_PROJECT_DIR}"
 
 if [[ ! -d "${REPO_DIR}" ]]; then
 	echo "[deploy] ERROR: repository directory does not exist: ${REPO_DIR}" >&2
@@ -76,9 +128,7 @@ if [[ ! -d .git ]]; then
 	exit 1
 fi
 
-git fetch origin "${BRANCH}"
-git checkout "${BRANCH}"
-git pull --ff-only origin "${BRANCH}"
+update_active_project "${BRANCH}" "${TARGET_NAME}" "${CONTAINER_PROJECT_DIR}"
 
 restart_target "${TARGET_NAME}"
 

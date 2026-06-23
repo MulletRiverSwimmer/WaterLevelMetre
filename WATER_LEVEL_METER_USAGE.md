@@ -205,6 +205,8 @@ It is designed for:
   ./scripts/deploy-centos.sh /home/<user>@ourhome.local/WaterLevelMetre main node-red
   ```
 
+- If the container uses a Node-RED project checkout inside `/data/projects/<project>`, the deploy script now updates that in-container project before restarting the container. You can override the in-container project path with a fourth argument when needed.
+
 - The flow currently expects these MQTT topics:
   - telemetry in: `waterlevel/+/data`
   - settings in: `waterlevel/+/settings`
