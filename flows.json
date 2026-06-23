@@ -1126,6 +1126,28 @@
         ]
     },
     {
+        "id": "6d0f6dd09a9e4fb4",
+        "type": "ui-template",
+        "z": "5f797197af0573e8",
+        "group": "23f681f586e541dc",
+        "page": "",
+        "ui": "",
+        "name": "Dashboard Version",
+        "order": 3,
+        "width": 4,
+        "height": 1,
+        "format": "<template>\n  <div style=\"padding:8px 10px; font-size:12px; color:#666; border:1px solid #d8d8d8; border-radius:6px; background:#f7f7f7; text-align:center;\">Dashboard build: 2026-06-23.1</div>\n</template>",
+        "storeOutMessages": false,
+        "passthru": false,
+        "templateScope": "local",
+        "className": "",
+        "x": 1240,
+        "y": 580,
+        "wires": [
+            []
+        ]
+    },
+    {
         "id": "bb0578350c21e7c4",
         "type": "function",
         "z": "5f797197af0573e8",
