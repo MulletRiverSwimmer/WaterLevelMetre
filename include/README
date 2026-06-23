@@ -1,0 +1,9 @@
+Project headers live here.
+
+Current primary header:
+- app_state.h: shared constants, global state declarations, and function prototypes used by files in src.
+
+Notes for this project:
+- Keep hardware pin definitions and compile-time constants in app_state.h.
+- Add extern declarations here for globals defined in src/main.cpp.
+- Add function prototypes here when introducing new source modules.

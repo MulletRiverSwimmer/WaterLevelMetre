@@ -1,0 +1,9 @@
+Place PlatformIO unit and integration tests in this directory.
+
+Current state:
+- No automated tests are included yet.
+
+Recommended next additions:
+- Parsing tests for UART SR04M-2 frame handling.
+- Config load/save validation tests for sensor_mode and MQTT settings.
+- Basic measurement filtering tests (median/outlier rejection behavior).

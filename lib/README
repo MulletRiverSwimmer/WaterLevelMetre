@@ -1,0 +1,10 @@
+Project-private libraries can be added in this directory when needed.
+
+Current state:
+- No private libraries are required.
+- External dependencies are managed via lib_deps in platformio.ini.
+
+If you add local reusable code:
+- Create a folder like lib/<library_name>/src.
+- Place headers and source files there.
+- Include headers from src files as needed.
