@@ -192,6 +192,32 @@ bool applyRemoteConfigJson(const char* json, char* resultMsg, size_t resultMsgLe
 
   bool changed = false;
 
+  auto parseBoolField = [](JsonVariantConst field, bool* out) -> bool {
+    if (!out || field.isNull()) return false;
+
+    if (field.is<bool>()) {
+      *out = field.as<bool>();
+      return true;
+    }
+
+    if (field.is<const char*>()) {
+      const char* s = field.as<const char*>();
+      if (!s) return false;
+
+      if (strcasecmp(s, "true") == 0 || strcmp(s, "1") == 0 || strcasecmp(s, "on") == 0 || strcasecmp(s, "yes") == 0) {
+        *out = true;
+        return true;
+      }
+
+      if (strcasecmp(s, "false") == 0 || strcmp(s, "0") == 0 || strcasecmp(s, "off") == 0 || strcasecmp(s, "no") == 0) {
+        *out = false;
+        return true;
+      }
+    }
+
+    return false;
+  };
+
   if (doc["interval_seconds"].is<unsigned long>()) {
     uint32_t v = doc["interval_seconds"].as<uint32_t>();
     if (v >= 5) {
@@ -216,13 +242,14 @@ bool applyRemoteConfigJson(const char* json, char* resultMsg, size_t resultMsgLe
     }
   }
 
-  if (doc["enable_deep_sleep"].is<bool>()) {
-    enable_deep_sleep = doc["enable_deep_sleep"].as<bool>();
+  bool parsedBool = false;
+  if (parseBoolField(doc["enable_deep_sleep"], &parsedBool)) {
+    enable_deep_sleep = parsedBool;
     changed = true;
   }
 
-  if (doc["production_mode"].is<bool>()) {
-    production_mode = doc["production_mode"].as<bool>();
+  if (parseBoolField(doc["production_mode"], &parsedBool)) {
+    production_mode = parsedBool;
     changed = true;
   }
 
@@ -234,8 +261,8 @@ bool applyRemoteConfigJson(const char* json, char* resultMsg, size_t resultMsgLe
     changed = true;
   }
 
-  if (doc["ntp_enabled"].is<bool>()) {
-    ntp_enabled = doc["ntp_enabled"].as<bool>();
+  if (parseBoolField(doc["ntp_enabled"], &parsedBool)) {
+    ntp_enabled = parsedBool;
     changed = true;
   }
 
