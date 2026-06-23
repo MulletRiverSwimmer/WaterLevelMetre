@@ -1109,7 +1109,7 @@
         "y": 680,
         "wires": [
             [
-                "5d2d3ebceb454746"
+                "dbg_config_set"
             ]
         ]
     },
@@ -1120,6 +1120,94 @@
         "broker": "e0e7eb4b34d557fd",
         "x": 1230,
         "y": 740,
+        "wires": []
+    },
+    {
+        "id": "dbg_config_set",
+        "type": "function",
+        "z": "5f797197af0573e8",
+        "name": "Log Config Set",
+        "func": "if (msg.topic && msg.topic.includes(\"/config/set\")) {\n  msg.lastConfigSetPayload = msg.payload;\n  global.set(\"lastConfigSet\", {ts: new Date().toLocaleString(), topic: msg.topic, payload: msg.payload});\n}\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 950,
+        "y": 740,
+        "wires": [
+            [
+                "5d2d3ebceb454746"
+            ]
+        ]
+    },
+    {
+        "id": "dbg_config_display",
+        "type": "ui-text",
+        "z": "5f797197af0573e8",
+        "group": "23f681f586e541dc",
+        "order": 4,
+        "width": 4,
+        "height": 3,
+        "name": "Debug: Last Config Set",
+        "label": "Last Config/Set Sent",
+        "format": "{{msg.payload | json}}",
+        "layout": "row-spread",
+        "style": false,
+        "font": "",
+        "fontSize": 12,
+        "color": "#717171",
+        "wrapText": true,
+        "className": "",
+        "value": "payload",
+        "valueType": "msg",
+        "x": 950,
+        "y": 820,
+        "wires": []
+    },
+    {
+        "id": "dbg_config_ack_listener",
+        "type": "mqtt in",
+        "z": "5f797197af0573e8",
+        "name": "Config ACK",
+        "topic": "waterlevel/+/config/ack",
+        "qos": 2,
+        "datatype": "json",
+        "broker": "e0e7eb4b34d557fd",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "x": 750,
+        "y": 880,
+        "wires": [
+            [
+                "dbg_config_ack_display"
+            ]
+        ]
+    },
+    {
+        "id": "dbg_config_ack_display",
+        "type": "ui-text",
+        "z": "5f797197af0573e8",
+        "group": "23f681f586e541dc",
+        "order": 5,
+        "width": 4,
+        "height": 3,
+        "name": "Debug: Config Responses",
+        "label": "Config/Ack Response",
+        "format": "{{msg.payload | json}}",
+        "layout": "row-spread",
+        "style": false,
+        "font": "",
+        "fontSize": 12,
+        "color": "#717171",
+        "wrapText": true,
+        "className": "",
+        "value": "payload",
+        "valueType": "msg",
+        "x": 950,
+        "y": 880,
         "wires": []
     },
     {
