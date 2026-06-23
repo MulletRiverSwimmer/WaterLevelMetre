@@ -718,7 +718,28 @@
         "y": 480,
         "wires": [
             [
-                "75176c50bb68930b"
+                "75176c50bb68930b",
+                "2c9dfccf1fd6ab36"
+            ]
+        ]
+    },
+    {
+        "id": "2c9dfccf1fd6ab36",
+        "type": "function",
+        "z": "5f797197af0573e8",
+        "name": "Request settings for selected tank",
+        "func": "msg.payload = { action: \"refresh\" };\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1260,
+        "y": 520,
+        "wires": [
+            [
+                "40ce15d66ec74834"
             ]
         ]
     },
