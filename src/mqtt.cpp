@@ -183,6 +183,9 @@ void publishConfigAck(bool success, const char* message) {
 bool applyRemoteConfigJson(const char* json, char* resultMsg, size_t resultMsgLen) {
   if (!json || !resultMsg || resultMsgLen == 0) return false;
 
+  infoPrint(F("[CONFIG] Parsing JSON: "));
+  Serial.println(json);
+  
   JsonDocument doc;
   DeserializationError err = deserializeJson(doc, json);
   if (err) {
@@ -249,6 +252,10 @@ bool applyRemoteConfigJson(const char* json, char* resultMsg, size_t resultMsgLe
   }
 
   if (parseBoolField(doc["production_mode"], &parsedBool)) {
+    infoPrint(F("[CONFIG] production_mode: "));
+    Serial.print(production_mode);
+    Serial.print(F(" -> "));
+    Serial.println(parsedBool);
     production_mode = parsedBool;
     changed = true;
   }
@@ -302,10 +309,12 @@ bool applyRemoteConfigJson(const char* json, char* resultMsg, size_t resultMsgLe
   updateLogLevel();
 
   if (!changed) {
+    infoPrintln(F("[CONFIG] No valid changes detected"));
     snprintf(resultMsg, resultMsgLen, "no valid changes");
     return false;
   }
 
+  infoPrintln(F("[CONFIG] Changes detected; returning success"));
   snprintf(resultMsg, resultMsgLen, "config updated");
   return true;
 }
@@ -331,6 +340,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
   }
 
   if (strcmp(topic, mqtt_config_set_topic) == 0) {
+    infoPrintln(F("[MQTT] config/set message received"));
     if (msg[0] == '\0') {
       infoPrintln(F("[MQTT] Empty config/set payload received; ignoring."));
       return;
@@ -338,9 +348,12 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
 
     char result[160];
     bool ok = applyRemoteConfigJson(msg, result, sizeof(result));
+    infoPrint(F("[MQTT] applyRemoteConfigJson() returned: "));
+    Serial.println(ok);
     publishConfigAck(ok, result);
 
     if (ok) {
+      infoPrintln(F("[MQTT] Calling saveConfigAndPublish()"));
       saveConfigAndPublish();
     }
     return;

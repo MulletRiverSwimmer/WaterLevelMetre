@@ -64,6 +64,7 @@ bool readConfigFromFS() {
 }
 
 void writeConfigToFS() {
+  infoPrintln(F("[CONFIG] Writing config to LittleFS..."));
   JsonDocument doc;
   doc["wifi_ssid"] = wifi_ssid;
   doc["wifi_password"] = wifi_password;
@@ -75,6 +76,8 @@ void writeConfigToFS() {
   doc["device_id"] = device_id;
   doc["enable_deep_sleep"] = enable_deep_sleep;
   doc["production_mode"] = production_mode;
+  infoPrint(F("[CONFIG] Writing production_mode: "));
+  Serial.println(production_mode);
   doc["log_level"] = stored_log_level;
   doc["ntp_enabled"] = ntp_enabled;
   doc["ntp_server"] = ntp_server;
@@ -88,10 +91,14 @@ void writeConfigToFS() {
   if (f) {
     serializeJsonPretty(doc, f);
     f.close();
+    infoPrintln(F("[CONFIG] Config written successfully"));
+  } else {
+    errorPrintln(F("[CONFIG] Failed to open config file for writing"));
   }
 }
 
 void saveConfigAndPublish() {
+  infoPrintln(F("[CONFIG] saveConfigAndPublish() called"));
   writeConfigToFS();
   if (client.connected()) {
     publishSettingsToMqtt();
