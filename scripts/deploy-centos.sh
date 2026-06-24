@@ -65,11 +65,18 @@ sync_container_flows() {
 	if ! sudo "${runtime}" cp "${flow_src}" "${target_name}:${project_dir}/flows.json"; then
 		return 1
 	fi
+	if ! sudo "${runtime}" exec "${target_name}" sh -lc "chown node-red:node-red '${project_dir}/flows.json' && chmod 644 '${project_dir}/flows.json'"; then
+		echo "[deploy] warning: could not fix permissions on ${project_dir}/flows.json" >&2
+	fi
 
 	# Some Node-RED setups still run directly from /data/flows.json.
 	echo "[deploy] syncing flows.json to ${runtime} runtime: /data/flows.json"
 	if ! sudo "${runtime}" cp "${flow_src}" "${target_name}:/data/flows.json"; then
 		echo "[deploy] warning: could not sync /data/flows.json" >&2
+	else
+		if ! sudo "${runtime}" exec "${target_name}" sh -lc "chown node-red:node-red /data/flows.json && chmod 644 /data/flows.json"; then
+			echo "[deploy] warning: could not fix permissions on /data/flows.json" >&2
+		fi
 	fi
 
 	return 0
