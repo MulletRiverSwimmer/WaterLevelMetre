@@ -1,5 +1,7 @@
 #include "app_state.h"
 
+static const char* kSydneyPosixTz = "AEST-10AEDT,M10.1.0/2,M4.1.0/3";
+
 static char g_last_received_production_mode[32] = "absent";
 static char g_last_received_control_origin[64] = "absent";
 static char g_last_received_control_tx_id[48] = "absent";
@@ -9,6 +11,12 @@ static char g_last_message_type[24] = "unknown";
 static bool g_last_received_has_production_mode = false;
 static size_t g_last_received_payload_len = 0;
 static uint16_t g_last_applied_field_count = 0;
+
+const char* resolveTimezoneSpec(const char* tzValue) {
+  if (!tzValue || tzValue[0] == '\0') return kSydneyPosixTz;
+  if (strcmp(tzValue, "Australia/Sydney") == 0) return kSydneyPosixTz;
+  return tzValue;
+}
 
 const char* mqttStateName(int state) {
   switch (state) {
@@ -31,6 +39,15 @@ void setupNtpTime() {
     infoPrintln(F("[TIME] NTP sync disabled"));
     return;
   }
+
+  const char* tzSpec = resolveTimezoneSpec(device_timezone);
+  setenv("TZ", tzSpec, 1);
+  tzset();
+  infoPrint(F("[TIME] Timezone set to "));
+  Serial.print(device_timezone);
+  Serial.print(F(" (spec: "));
+  Serial.print(tzSpec);
+  Serial.println(F(")"));
 
   configTime(0, 0, ntp_server, "pool.ntp.org", "time.nist.gov");
   infoPrint(F("[TIME] Waiting for NTP sync to "));
@@ -259,6 +276,7 @@ bool applyRemoteConfigJson(const char* json, char* resultMsg, size_t resultMsgLe
   }
 
   bool changed = false;
+  bool timeSettingsChanged = false;
   uint16_t appliedFields = 0;
 
   if (doc["production_mode"].isNull()) {
@@ -388,6 +406,7 @@ bool applyRemoteConfigJson(const char* json, char* resultMsg, size_t resultMsgLe
     Serial.println(parsedBool);
     ntp_enabled = parsedBool;
     changed = true;
+    timeSettingsChanged = true;
     appliedFields++;
   }
 
@@ -400,6 +419,21 @@ bool applyRemoteConfigJson(const char* json, char* resultMsg, size_t resultMsgLe
       Serial.println(s);
       strlcpy(ntp_server, s, sizeof(ntp_server));
       changed = true;
+      timeSettingsChanged = true;
+      appliedFields++;
+    }
+  }
+
+  if (doc["timezone"].is<const char*>()) {
+    const char* tz = doc["timezone"];
+    if (tz && strlen(tz) > 0) {
+      infoPrint(F("[CONFIG] timezone: "));
+      Serial.print(device_timezone);
+      Serial.print(F(" -> "));
+      Serial.println(tz);
+      strlcpy(device_timezone, tz, sizeof(device_timezone));
+      changed = true;
+      timeSettingsChanged = true;
       appliedFields++;
     }
   }
@@ -456,6 +490,12 @@ bool applyRemoteConfigJson(const char* json, char* resultMsg, size_t resultMsgLe
   g_last_applied_field_count = appliedFields;
   infoPrint(F("[CONFIG] Applied field count: "));
   Serial.println(g_last_applied_field_count);
+
+  if (timeSettingsChanged && ntp_enabled && WiFi.status() == WL_CONNECTED) {
+    infoPrintln(F("[CONFIG] Time settings changed; re-syncing NTP now"));
+    setupNtpTime();
+  }
+
   infoPrintln(F("[CONFIG] Changes detected; returning success"));
   snprintf(resultMsg, resultMsgLen, "config updated");
   return true;
@@ -541,6 +581,7 @@ void publishSettingsToMqtt() {
   doc["log_level"] = stored_log_level;
   doc["ntp_enabled"] = ntp_enabled;
   doc["ntp_server"] = ntp_server;
+  doc["timezone"] = device_timezone;
   doc["sensor_mode"] = sensor_mode;
   doc["sensor_mode_name"] = sensorModeName(sensor_mode);
   doc["depth_cm"] = last_depth_measured;

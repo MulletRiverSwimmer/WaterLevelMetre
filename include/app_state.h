@@ -78,6 +78,7 @@ extern char mqtt_server[64];
 extern int mqtt_port;
 extern int mqtt_connect_attempts;
 extern char ntp_server[64];
+extern char device_timezone[64];
 
 extern char device_id[DEVICE_ID_MAXLEN];
 extern uint32_t interval_seconds;

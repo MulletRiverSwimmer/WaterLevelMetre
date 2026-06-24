@@ -25,6 +25,7 @@ bool readConfigFromFS() {
   production_mode = doc["production_mode"] | false;
   ntp_enabled = doc["ntp_enabled"] | true;
   strlcpy(ntp_server, doc["ntp_server"] | "pool.ntp.org", sizeof(ntp_server));
+  strlcpy(device_timezone, doc["timezone"] | "Australia/Sydney", sizeof(device_timezone));
 
   if (doc["sensor_mode"].is<int>() || doc["sensor_mode"].is<uint8_t>()) {
     int m = doc["sensor_mode"] | SENSOR_MODE_TRIG_ECHO;
@@ -81,6 +82,7 @@ void writeConfigToFS() {
   doc["log_level"] = stored_log_level;
   doc["ntp_enabled"] = ntp_enabled;
   doc["ntp_server"] = ntp_server;
+  doc["timezone"] = device_timezone;
   doc["sensor_mode"] = sensor_mode;
   doc["last_depth_measured"] = last_depth_measured;
   doc["running_avg_value"] = running_avg_value;
@@ -136,6 +138,10 @@ void promptForFSConfig() {
   debugPrintln(F("Enter NTP server (default pool.ntp.org):"));
   readSerialLineBlocking(line, sizeof(line));
   if (!isBlank(line)) strlcpy(ntp_server, line, sizeof(ntp_server));
+
+  debugPrintln(F("Enter timezone (default Australia/Sydney):"));
+  readSerialLineBlocking(line, sizeof(line));
+  if (!isBlank(line)) strlcpy(device_timezone, line, sizeof(device_timezone));
 
   debugPrintln(F("Enter device ID:"));
   readSerialLineBlocking(line, sizeof(line));
@@ -289,6 +295,10 @@ void promptForConfigEdit() {
   debugPrint(F("NTP server [")); Serial.print(ntp_server); Serial.println(F("]:"));
   readSerialLineBlocking(line, sizeof(line));
   if (!isBlank(line)) strlcpy(ntp_server, line, sizeof(ntp_server));
+
+  debugPrint(F("Timezone [")); Serial.print(device_timezone); Serial.println(F("]:"));
+  readSerialLineBlocking(line, sizeof(line));
+  if (!isBlank(line)) strlcpy(device_timezone, line, sizeof(device_timezone));
 
   debugPrint(F("Log level ["));
   Serial.print(logLevelName(stored_log_level));

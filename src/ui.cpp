@@ -97,6 +97,7 @@ void printConfig() {
   debugPrint(F("Active Log Level: ")); Serial.println(logLevelName((uint8_t)currentLogLevel));
   debugPrint(F("NTP Sync: ")); Serial.println(ntp_enabled ? F("ON") : F("OFF"));
   debugPrint(F("NTP Server: ")); Serial.println(ntp_server);
+  debugPrint(F("Timezone: ")); Serial.println(device_timezone);
   debugPrint(F("Last Depth: ")); Serial.print(last_depth_measured, 1); Serial.println(F(" cm"));
   debugPrint(F("Running Avg: ")); Serial.print(running_avg_value, 1); Serial.println(F(" cm"));
   debugPrint(F("Battery Voltage: ")); Serial.print(last_battery_voltage, 2); Serial.println(F(" V"));
@@ -150,6 +151,9 @@ void showMenu() {
 
   snprintf(right, sizeof(right), "NTP Server: %s", ntp_server);
   printMenuLine("p: Print current configuration", right);
+
+  snprintf(right, sizeof(right), "Timezone: %s", device_timezone);
+  printMenuLine("", right);
 
   snprintf(right, sizeof(right), "Last Depth: %.1f cm", last_depth_measured);
   printMenuLine("r: Reboot device", right);

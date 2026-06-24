@@ -52,6 +52,7 @@ It is designed for:
     - MQTT connect attempts (default: 10)
     - NTP time sync enabled (y/n)
     - NTP server (default: pool.ntp.org)
+    - Timezone (default: Australia/Sydney)
     - Device ID (unique for each tank/device)
     - Sensor offset (cm)
     - Sensor mode (`0` = TRIG/ECHO, `1` = UART SR04M-2)
@@ -100,7 +101,8 @@ It is designed for:
     "interval_seconds": 600,
     "enable_deep_sleep": true,
     "ntp_enabled": true,
-    "ntp_server": "pool.ntp.org"
+    "ntp_server": "pool.ntp.org",
+    "timezone": "Australia/Sydney"
   }
   ```
 - Save and reboot the device.

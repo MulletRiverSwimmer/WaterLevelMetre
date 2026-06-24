@@ -26,6 +26,7 @@ char mqtt_server[64] = "";
 int mqtt_port = 1883;
 int mqtt_connect_attempts = 10;
 char ntp_server[64] = "pool.ntp.org";
+char device_timezone[64] = "Australia/Sydney";
 
 char device_id[DEVICE_ID_MAXLEN] = "";
 uint32_t interval_seconds = 600;
