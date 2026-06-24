@@ -1,6 +1,20 @@
 #include "app_state.h"
 
-static const char* kSydneyPosixTz = "AEST-10AEDT,M10.1.0/2,M4.1.0/3";
+struct TimezoneMapping {
+  const char* name;
+  const char* posix;
+};
+
+static const TimezoneMapping kTimezoneMappings[] = {
+  {"Etc/UTC", "UTC0"},
+  {"Australia/Perth", "AWST-8"},
+  {"Australia/Darwin", "ACST-9:30"},
+  {"Australia/Adelaide", "ACST-9:30ACDT,M10.1.0/2,M4.1.0/3"},
+  {"Australia/Brisbane", "AEST-10"},
+  {"Australia/Sydney", "AEST-10AEDT,M10.1.0/2,M4.1.0/3"},
+  {"Australia/Hobart", "AEST-10AEDT,M10.1.0/2,M4.1.0/3"},
+  {"Pacific/Auckland", "NZST-12NZDT,M9.5.0/2,M4.1.0/3"}
+};
 
 static char g_last_received_production_mode[32] = "absent";
 static char g_last_received_control_origin[64] = "absent";
@@ -13,8 +27,14 @@ static size_t g_last_received_payload_len = 0;
 static uint16_t g_last_applied_field_count = 0;
 
 const char* resolveTimezoneSpec(const char* tzValue) {
-  if (!tzValue || tzValue[0] == '\0') return kSydneyPosixTz;
-  if (strcmp(tzValue, "Australia/Sydney") == 0) return kSydneyPosixTz;
+  if (!tzValue || tzValue[0] == '\0') return "AEST-10AEDT,M10.1.0/2,M4.1.0/3";
+
+  for (size_t i = 0; i < (sizeof(kTimezoneMappings) / sizeof(kTimezoneMappings[0])); i++) {
+    if (strcmp(tzValue, kTimezoneMappings[i].name) == 0) {
+      return kTimezoneMappings[i].posix;
+    }
+  }
+
   return tzValue;
 }
 
@@ -41,6 +61,9 @@ void setupNtpTime() {
   }
 
   const char* tzSpec = resolveTimezoneSpec(device_timezone);
+  configTime(0, 0, ntp_server, "pool.ntp.org", "time.nist.gov");
+
+  // On ESP8266, configTime can reset TZ handling. Apply TZ after configTime.
   setenv("TZ", tzSpec, 1);
   tzset();
   infoPrint(F("[TIME] Timezone set to "));
@@ -49,7 +72,6 @@ void setupNtpTime() {
   Serial.print(tzSpec);
   Serial.println(F(")"));
 
-  configTime(0, 0, ntp_server, "pool.ntp.org", "time.nist.gov");
   infoPrint(F("[TIME] Waiting for NTP sync to "));
   Serial.println(ntp_server);
 
@@ -61,6 +83,10 @@ void setupNtpTime() {
 
   time_t now = time(nullptr);
   if (now > 1600000000UL) {
+    // Re-apply once synced to ensure localtime uses the intended timezone.
+    setenv("TZ", tzSpec, 1);
+    tzset();
+
     infoPrintln(F("[TIME] NTP synchronized"));
     struct tm* tmInfo = localtime(&now);
     if (tmInfo) {

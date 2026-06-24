@@ -1,5 +1,64 @@
 #include "app_state.h"
 
+struct TimezoneOption {
+  const char* id;
+  const char* label;
+};
+
+static const TimezoneOption kTimezoneOptions[] = {
+  {"Etc/UTC", "UTC (UTC+00:00)"},
+  {"Australia/Perth", "Australia/Perth (UTC+08:00)"},
+  {"Australia/Darwin", "Australia/Darwin (UTC+09:30)"},
+  {"Australia/Adelaide", "Australia/Adelaide (UTC+09:30 / +10:30 DST)"},
+  {"Australia/Brisbane", "Australia/Brisbane (UTC+10:00)"},
+  {"Australia/Sydney", "Australia/Sydney (UTC+10:00 / +11:00 DST)"},
+  {"Australia/Hobart", "Australia/Hobart (UTC+10:00 / +11:00 DST)"},
+  {"Pacific/Auckland", "Pacific/Auckland (UTC+12:00 / +13:00 DST)"}
+};
+
+void promptForTimezoneSelection(const char* currentValue, bool allowKeepCurrent) {
+  char line[SERIAL_LINE_MAX];
+
+  debugPrintln(F("Select timezone from the list below:"));
+  for (size_t i = 0; i < (sizeof(kTimezoneOptions) / sizeof(kTimezoneOptions[0])); i++) {
+    Serial.print(i + 1);
+    Serial.print(F(") "));
+    Serial.print(kTimezoneOptions[i].label);
+    Serial.print(F(" -> "));
+    Serial.println(kTimezoneOptions[i].id);
+  }
+
+  if (allowKeepCurrent) {
+    debugPrint(F("Timezone ["));
+    Serial.print(currentValue && currentValue[0] ? currentValue : "Australia/Sydney");
+    Serial.println(F("] - enter number, full timezone ID, or blank to keep current:"));
+  } else {
+    debugPrint(F("Timezone ["));
+    Serial.print(currentValue && currentValue[0] ? currentValue : "Australia/Sydney");
+    Serial.println(F("] - enter number, full timezone ID, or blank for default/current:"));
+  }
+
+  readSerialLineBlocking(line, sizeof(line));
+  if (isBlank(line)) return;
+
+  char* endptr = nullptr;
+  long selected = strtol(line, &endptr, 10);
+  if (endptr && *endptr == '\0' && selected >= 1 && selected <= (long)(sizeof(kTimezoneOptions) / sizeof(kTimezoneOptions[0]))) {
+    strlcpy(device_timezone, kTimezoneOptions[selected - 1].id, sizeof(device_timezone));
+    return;
+  }
+
+  for (size_t i = 0; i < (sizeof(kTimezoneOptions) / sizeof(kTimezoneOptions[0])); i++) {
+    if (strcmp(line, kTimezoneOptions[i].id) == 0) {
+      strlcpy(device_timezone, kTimezoneOptions[i].id, sizeof(device_timezone));
+      return;
+    }
+  }
+
+  // Fallback for advanced users: allow explicit IANA/POSIX timezone strings.
+  strlcpy(device_timezone, line, sizeof(device_timezone));
+}
+
 bool readConfigFromFS() {
   if (!LittleFS.exists(CONFIG_FILE)) return false;
 
@@ -139,9 +198,7 @@ void promptForFSConfig() {
   readSerialLineBlocking(line, sizeof(line));
   if (!isBlank(line)) strlcpy(ntp_server, line, sizeof(ntp_server));
 
-  debugPrintln(F("Enter timezone (default Australia/Sydney):"));
-  readSerialLineBlocking(line, sizeof(line));
-  if (!isBlank(line)) strlcpy(device_timezone, line, sizeof(device_timezone));
+  promptForTimezoneSelection(device_timezone, false);
 
   debugPrintln(F("Enter device ID:"));
   readSerialLineBlocking(line, sizeof(line));
@@ -296,9 +353,7 @@ void promptForConfigEdit() {
   readSerialLineBlocking(line, sizeof(line));
   if (!isBlank(line)) strlcpy(ntp_server, line, sizeof(ntp_server));
 
-  debugPrint(F("Timezone [")); Serial.print(device_timezone); Serial.println(F("]:"));
-  readSerialLineBlocking(line, sizeof(line));
-  if (!isBlank(line)) strlcpy(device_timezone, line, sizeof(device_timezone));
+  promptForTimezoneSelection(device_timezone, true);
 
   debugPrint(F("Log level ["));
   Serial.print(logLevelName(stored_log_level));
