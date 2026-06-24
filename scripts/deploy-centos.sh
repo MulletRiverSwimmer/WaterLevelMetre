@@ -42,7 +42,10 @@ bump_dashboard_build_version() {
 	fi
 
 	if [[ -n "${runtime}" && -n "${target_name}" && -n "${project_dir}" ]]; then
-		deployed_current=$(sudo "${runtime}" exec "${target_name}" sh -lc "grep -o 'Dashboard build: [0-9]\\{4\\}-[0-9]\\{2\\}-[0-9]\\{2\\}\\.[0-9]\\+' '${project_dir}/flows.json' 2>/dev/null | head -n1" || true)
+		deployed_current=$(sudo "${runtime}" exec "${target_name}" sh -lc "grep -E -o 'Dashboard build: [0-9]{4}-[0-9]{2}-[0-9]{2}\.[0-9]+' '${project_dir}/flows.json' 2>/dev/null | head -n1" || true)
+		if [[ -z "${deployed_current}" ]]; then
+			deployed_current=$(sudo "${runtime}" exec "${target_name}" sh -lc "grep -E -o 'Dashboard build: [0-9]{4}-[0-9]{2}-[0-9]{2}\.[0-9]+' '/data/flows.json' 2>/dev/null | head -n1" || true)
+		fi
 		if [[ -n "${deployed_current}" ]]; then
 			current="${deployed_current}"
 		fi
