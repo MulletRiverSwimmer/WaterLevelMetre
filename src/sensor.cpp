@@ -305,9 +305,10 @@ void measureWaterLevel(char* payload, size_t len) {
   }
 
   snprintf(payload, len,
-           "{\"device_id\":\"%s\",\"distance_cm\":%.1f,\"battery_v\":%.2f,\"battery_pct\":%.0f,\"tank_pct\":%.0f,\"local_time\":\"%s\"}",
+           "{\"device_id\":\"%s\",\"distance_cm\":%.1f,\"depth_cm\":%.1f,\"battery_v\":%.2f,\"battery_pct\":%.0f,\"tank_pct\":%.0f,\"local_time\":\"%s\"}",
            device_id,
            (float)distance,
+           last_depth_measured,
            last_battery_voltage,
            last_battery_percent,
            last_tank_percent,
