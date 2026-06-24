@@ -295,13 +295,23 @@ void measureWaterLevel(char* payload, size_t len) {
   Serial.print(running_avg_value, 1);
   Serial.println(F(" cm"));
 
+  char localTime[24] = "";
+  time_t now = time(nullptr);
+  if (now > 1600000000UL) {
+    struct tm* tmInfo = localtime(&now);
+    if (tmInfo) {
+      strftime(localTime, sizeof(localTime), "%Y-%m-%d %H:%M:%S", tmInfo);
+    }
+  }
+
   snprintf(payload, len,
-           "{\"device_id\":\"%s\",\"distance_cm\":%.1f,\"battery_v\":%.2f,\"battery_pct\":%.0f,\"tank_pct\":%.0f}",
+           "{\"device_id\":\"%s\",\"distance_cm\":%.1f,\"battery_v\":%.2f,\"battery_pct\":%.0f,\"tank_pct\":%.0f,\"local_time\":\"%s\"}",
            device_id,
            (float)distance,
            last_battery_voltage,
            last_battery_percent,
-           last_tank_percent);
+           last_tank_percent,
+           localTime);
 }
 
 void enterDeepSleep() {
