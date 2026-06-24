@@ -63,8 +63,9 @@ if ($match.Success) {
 }
 
 Write-Host "`n=== Validating flows.json ===" -ForegroundColor Cyan
+ $global:LASTEXITCODE = 0
 & ".\scripts\validate-flow.ps1"
-if ($LASTEXITCODE -ne 0) {
+if (-not $? -or $LASTEXITCODE -ne 0) {
     Write-Host "Validation failed!" -ForegroundColor Red
     exit 1
 }
