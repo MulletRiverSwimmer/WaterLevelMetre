@@ -24,6 +24,9 @@ update_host_repo() {
 }
 
 bump_dashboard_build_version() {
+	local runtime="${1:-}"
+	local target_name="${2:-}"
+	local project_dir="${3:-}"
 	local flow_file="${REPO_DIR}/flows.json"
 	DEPLOY_FLOW_FILE="${flow_file}"
 	if [[ ! -f "${flow_file}" ]]; then
@@ -31,11 +34,18 @@ bump_dashboard_build_version() {
 		return
 	fi
 
-	local current token suffix next_suffix today next
+	local current token suffix next_suffix today next deployed_current
 	current=$(grep -o 'Dashboard build: [0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}\.[0-9]\+' "${flow_file}" | head -n1 || true)
 	if [[ -z "${current}" ]]; then
 		echo "[deploy] warning: dashboard build marker not found; skipping bump"
 		return
+	fi
+
+	if [[ -n "${runtime}" && -n "${target_name}" && -n "${project_dir}" ]]; then
+		deployed_current=$(sudo "${runtime}" exec "${target_name}" sh -lc "grep -o 'Dashboard build: [0-9]\\{4\\}-[0-9]\\{2\\}-[0-9]\\{2\\}\\.[0-9]\\+' '${project_dir}/flows.json' 2>/dev/null | head -n1" || true)
+		if [[ -n "${deployed_current}" ]]; then
+			current="${deployed_current}"
+		fi
 	fi
 
 	token=${current#Dashboard build: }
@@ -111,19 +121,23 @@ update_active_project() {
 	local project_dir="$3"
 
 	update_host_repo "${branch}"
-	bump_dashboard_build_version
 
 	if command -v docker >/dev/null 2>&1 && sudo docker ps -a --format '{{.Names}}' | grep -Fxq "${target_name}"; then
+		bump_dashboard_build_version docker "${target_name}" "${project_dir}"
 		if sync_container_flows docker "${target_name}" "${project_dir}"; then
 			return 0
 		fi
 	fi
 
 	if command -v podman >/dev/null 2>&1 && sudo podman ps -a --format '{{.Names}}' | grep -Fxq "${target_name}"; then
+		bump_dashboard_build_version podman "${target_name}" "${project_dir}"
 		if sync_container_flows podman "${target_name}" "${project_dir}"; then
 			return 0
 		fi
 	fi
+
+	# Fallback when no matching container runtime target is available.
+	bump_dashboard_build_version
 }
 
 # Some shells/users accidentally pass a domain-qualified path like:
