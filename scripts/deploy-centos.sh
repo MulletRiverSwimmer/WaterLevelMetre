@@ -20,22 +20,35 @@ run_privileged() {
 	return 1
 }
 
+runtime_access_mode() {
+	local runtime="$1"
+	if "${runtime}" ps >/dev/null 2>&1; then
+		echo direct
+		return 0
+	fi
+	if command -v sudo >/dev/null 2>&1 && sudo -n "${runtime}" ps >/dev/null 2>&1; then
+		echo sudo
+		return 0
+	fi
+	return 1
+}
+
 run_runtime() {
 	local runtime="$1"
 	shift
-	run_privileged "${runtime}" "$@"
+	local mode
+	mode=$(runtime_access_mode "${runtime}") || return 1
+	if [[ "${mode}" == "direct" ]]; then
+		"${runtime}" "$@"
+		return $?
+	fi
+	sudo -n "${runtime}" "$@"
 }
 
 have_runtime_access() {
 	local runtime="$1"
 	shift
-	if "${runtime}" "$@" >/dev/null 2>&1; then
-		return 0
-	fi
-	if command -v sudo >/dev/null 2>&1 && sudo -n "${runtime}" "$@" >/dev/null 2>&1; then
-		return 0
-	fi
-	return 1
+	runtime_access_mode "${runtime}" >/dev/null 2>&1
 }
 
 cleanup_tmp_flow() {
