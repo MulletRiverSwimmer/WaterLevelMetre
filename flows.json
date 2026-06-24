@@ -1127,8 +1127,8 @@
     "type": "function",
     "z": "5f797197af0573e8",
     "name": "Log Config Set",
-    "func": "if (msg.topic && msg.topic.includes('/config/set')) {\n  var p = msg.payload;\n  if (typeof p === 'string') {\n    try { p = JSON.parse(p); } catch (e) {}\n  }\n  msg.payload = {\n    ts: new Date().toISOString(),\n    topic: msg.topic,\n    control_origin: p && p.control_origin ? p.control_origin : '(none)',\n    control_tx_id: p && p.control_tx_id ? p.control_tx_id : '(none)',\n    production_mode: (p && Object.prototype.hasOwnProperty.call(p, 'production_mode')) ? p.production_mode : '(absent)',\n    raw: p\n  };\n  global.set('lastConfigSet', msg.payload);\n}\nreturn msg;",
-    "outputs": 1,
+    "func": "if (!(msg.topic && msg.topic.includes('/config/set'))) {\n  return [msg, null];\n}\n\nvar p = msg.payload;\nif (typeof p === 'string') {\n  try { p = JSON.parse(p); } catch (e) {}\n}\n\nvar dbg = {\n  ts: new Date().toISOString(),\n  topic: msg.topic,\n  control_origin: p && p.control_origin ? p.control_origin : '(none)',\n  control_tx_id: p && p.control_tx_id ? p.control_tx_id : '(none)',\n  production_mode: (p && Object.prototype.hasOwnProperty.call(p, 'production_mode')) ? p.production_mode : '(absent)',\n  raw: p\n};\n\nglobal.set('lastConfigSet', dbg);\n\nreturn [msg, { topic: msg.topic, payload: dbg }];",
+    "outputs": 2,
     "timeout": 0,
     "noerr": 0,
     "initialize": "",
@@ -1138,7 +1138,9 @@
     "y": 740,
     "wires": [
       [
-        "5d2d3ebceb454746",
+        "5d2d3ebceb454746"
+      ],
+      [
         "dbg_config_formatter"
       ]
     ]
