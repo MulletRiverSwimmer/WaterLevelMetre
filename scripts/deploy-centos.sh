@@ -5,6 +5,15 @@ REPO_DIR="${1:-$HOME/WaterLevelMetre}"
 BRANCH="${2:-main}"
 TARGET_NAME="${3:-nodered}"
 CONTAINER_PROJECT_DIR="${4:-/data/projects/$(basename "${REPO_DIR}")}"
+DEPLOY_FLOW_FILE=""
+
+cleanup_tmp_flow() {
+	if [[ -n "${DEPLOY_FLOW_FILE}" && "${DEPLOY_FLOW_FILE}" != "${REPO_DIR}/flows.json" && -f "${DEPLOY_FLOW_FILE}" ]]; then
+		rm -f "${DEPLOY_FLOW_FILE}"
+	fi
+}
+
+trap cleanup_tmp_flow EXIT
 
 update_host_repo() {
 	local branch="$1"
@@ -14,13 +23,46 @@ update_host_repo() {
 	git pull --ff-only origin "${branch}"
 }
 
+bump_dashboard_build_version() {
+	local flow_file="${REPO_DIR}/flows.json"
+	DEPLOY_FLOW_FILE="${flow_file}"
+	if [[ ! -f "${flow_file}" ]]; then
+		echo "[deploy] warning: ${flow_file} not found; skipping dashboard build bump"
+		return
+	fi
+
+	local current token suffix next_suffix today next
+	current=$(grep -o 'Dashboard build: [0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}\.[0-9]\+' "${flow_file}" | head -n1 || true)
+	if [[ -z "${current}" ]]; then
+		echo "[deploy] warning: dashboard build marker not found; skipping bump"
+		return
+	fi
+
+	token=${current#Dashboard build: }
+	suffix=${token##*.}
+	today=$(date +%F)
+
+	if [[ ${token%.*} == "${today}" ]]; then
+		next_suffix=$((suffix + 1))
+	else
+		next_suffix=1
+	fi
+
+	next="Dashboard build: ${today}.${next_suffix}"
+	DEPLOY_FLOW_FILE=$(mktemp)
+	cp "${flow_file}" "${DEPLOY_FLOW_FILE}"
+	sed -i "0,/Dashboard build: [0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}\.[0-9]\+/s//${next}/" "${DEPLOY_FLOW_FILE}"
+	echo "[deploy] ${current} -> ${next}"
+}
+
 sync_container_flows() {
 	local runtime="$1"
 	local target_name="$2"
 	local project_dir="$3"
+	local flow_src="${DEPLOY_FLOW_FILE:-${REPO_DIR}/flows.json}"
 
 	echo "[deploy] syncing flows.json to ${runtime} project: ${project_dir}"
-	if sudo "${runtime}" cp "${REPO_DIR}/flows.json" "${target_name}:${project_dir}/flows.json"; then
+	if sudo "${runtime}" cp "${flow_src}" "${target_name}:${project_dir}/flows.json"; then
 		return 0
 	fi
 	return 1
@@ -61,6 +103,7 @@ update_active_project() {
 	local project_dir="$3"
 
 	update_host_repo "${branch}"
+	bump_dashboard_build_version
 
 	if command -v docker >/dev/null 2>&1 && sudo docker ps -a --format '{{.Names}}' | grep -Fxq "${target_name}"; then
 		if sync_container_flows docker "${target_name}" "${project_dir}"; then
