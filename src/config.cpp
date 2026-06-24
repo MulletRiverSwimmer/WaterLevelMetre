@@ -83,6 +83,11 @@ bool readConfigFromFS() {
   enable_deep_sleep = doc["enable_deep_sleep"] | false;
   production_mode = doc["production_mode"] | false;
   ntp_enabled = doc["ntp_enabled"] | true;
+  power_fast_sampling = doc["power_fast_sampling"] | true;
+  power_wifi_modem_sleep = doc["power_wifi_modem_sleep"] | true;
+  power_skip_net_diagnostics = doc["power_skip_net_diagnostics"] | true;
+  power_radio_off_before_sleep = doc["power_radio_off_before_sleep"] | true;
+  power_skip_second_measurement_after_cache_flush = doc["power_skip_second_measurement_after_cache_flush"] | true;
   strlcpy(ntp_server, doc["ntp_server"] | "pool.ntp.org", sizeof(ntp_server));
   strlcpy(device_timezone, doc["timezone"] | "Australia/Sydney", sizeof(device_timezone));
 
@@ -140,6 +145,11 @@ void writeConfigToFS() {
   Serial.println(production_mode);
   doc["log_level"] = stored_log_level;
   doc["ntp_enabled"] = ntp_enabled;
+  doc["power_fast_sampling"] = power_fast_sampling;
+  doc["power_wifi_modem_sleep"] = power_wifi_modem_sleep;
+  doc["power_skip_net_diagnostics"] = power_skip_net_diagnostics;
+  doc["power_radio_off_before_sleep"] = power_radio_off_before_sleep;
+  doc["power_skip_second_measurement_after_cache_flush"] = power_skip_second_measurement_after_cache_flush;
   doc["ntp_server"] = ntp_server;
   doc["timezone"] = device_timezone;
   doc["sensor_mode"] = sensor_mode;
@@ -237,6 +247,31 @@ void promptForFSConfig() {
   bool prod = production_mode;
   if (promptYesNoKeepCurrent(F("Enable production mode? (y/n):"), production_mode, &prod)) {
     production_mode = prod;
+  }
+
+  bool p1 = power_fast_sampling;
+  if (promptYesNoKeepCurrent(F("Power: fast sampling in production? (y/n):"), power_fast_sampling, &p1)) {
+    power_fast_sampling = p1;
+  }
+
+  bool p2 = power_wifi_modem_sleep;
+  if (promptYesNoKeepCurrent(F("Power: enable WiFi modem sleep? (y/n):"), power_wifi_modem_sleep, &p2)) {
+    power_wifi_modem_sleep = p2;
+  }
+
+  bool p3 = power_skip_net_diagnostics;
+  if (promptYesNoKeepCurrent(F("Power: skip extra network diagnostics? (y/n):"), power_skip_net_diagnostics, &p3)) {
+    power_skip_net_diagnostics = p3;
+  }
+
+  bool p4 = power_radio_off_before_sleep;
+  if (promptYesNoKeepCurrent(F("Power: turn radio off before deep sleep? (y/n):"), power_radio_off_before_sleep, &p4)) {
+    power_radio_off_before_sleep = p4;
+  }
+
+  bool p5 = power_skip_second_measurement_after_cache_flush;
+  if (promptYesNoKeepCurrent(F("Power: skip second measurement after cache flush in deep sleep mode? (y/n):"), power_skip_second_measurement_after_cache_flush, &p5)) {
+    power_skip_second_measurement_after_cache_flush = p5;
   }
 
   debugPrintln(F("Enter log level: 0=ERROR, 1=INFO, 2=DEBUG (default 2):"));
@@ -347,6 +382,31 @@ void promptForConfigEdit() {
   bool ntp = ntp_enabled;
   if (promptYesNoKeepCurrent(F("NTP sync (y/n):"), ntp_enabled, &ntp)) {
     ntp_enabled = ntp;
+  }
+
+  bool p1 = power_fast_sampling;
+  if (promptYesNoKeepCurrent(F("Power fast sampling in production (y/n):"), power_fast_sampling, &p1)) {
+    power_fast_sampling = p1;
+  }
+
+  bool p2 = power_wifi_modem_sleep;
+  if (promptYesNoKeepCurrent(F("Power WiFi modem sleep (y/n):"), power_wifi_modem_sleep, &p2)) {
+    power_wifi_modem_sleep = p2;
+  }
+
+  bool p3 = power_skip_net_diagnostics;
+  if (promptYesNoKeepCurrent(F("Power skip extra network diagnostics (y/n):"), power_skip_net_diagnostics, &p3)) {
+    power_skip_net_diagnostics = p3;
+  }
+
+  bool p4 = power_radio_off_before_sleep;
+  if (promptYesNoKeepCurrent(F("Power radio off before deep sleep (y/n):"), power_radio_off_before_sleep, &p4)) {
+    power_radio_off_before_sleep = p4;
+  }
+
+  bool p5 = power_skip_second_measurement_after_cache_flush;
+  if (promptYesNoKeepCurrent(F("Power skip second measurement after cache flush (y/n):"), power_skip_second_measurement_after_cache_flush, &p5)) {
+    power_skip_second_measurement_after_cache_flush = p5;
   }
 
   debugPrint(F("NTP server [")); Serial.print(ntp_server); Serial.println(F("]:"));

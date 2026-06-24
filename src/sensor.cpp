@@ -11,6 +11,20 @@ struct DistanceStats {
   int validCount;
 };
 
+static int activeReadingCount() {
+  if (production_mode && power_fast_sampling) {
+    return PROD_NUM_READINGS;
+  }
+  return NUM_READINGS;
+}
+
+static uint16_t activeReadingDelayMs() {
+  if (production_mode && power_fast_sampling) {
+    return PROD_READING_DELAY_MS;
+  }
+  return READING_DELAY_MS;
+}
+
 void setupSensorInterface() {
   if (sensor_mode == SENSOR_MODE_UART) {
 #ifdef ESP8266
@@ -106,15 +120,17 @@ static bool readSingleDistance(unsigned int* outDistanceCm) {
 static DistanceStats takeFilteredDistance(bool logSamples) {
   unsigned int* readings = sensor_readings;
   unsigned int* sorted = sensor_sorted;
+  int sampleCount = activeReadingCount();
+  uint16_t sampleDelayMs = activeReadingDelayMs();
 
-  for (int i = 0; i < NUM_READINGS; i++) {
+  for (int i = 0; i < sampleCount; i++) {
     unsigned int d = 0;
 
     if (logSamples) {
       debugPrint(F("[SENSOR] Starting reading "));
       Serial.print(i + 1);
       Serial.print(F(" of "));
-      Serial.println(NUM_READINGS);
+      Serial.println(sampleCount);
     }
 
     bool ok = readSingleDistance(&d);
@@ -135,17 +151,17 @@ static DistanceStats takeFilteredDistance(bool logSamples) {
       Serial.println(d);
     }
 
-    delayWithSerial(READING_DELAY_MS);
+    delayWithSerial(sampleDelayMs);
   }
 
-  memcpy(sorted, readings, sizeof(unsigned int) * NUM_READINGS);
-  std::sort(sorted, sorted + NUM_READINGS);
+  memcpy(sorted, readings, sizeof(unsigned int) * sampleCount);
+  std::sort(sorted, sorted + sampleCount);
 
-  unsigned int median = sorted[NUM_READINGS / 2];
+  unsigned int median = sorted[sampleCount / 2];
   unsigned int sum = 0;
   int validCount = 0;
 
-  for (int i = 0; i < NUM_READINGS; i++) {
+  for (int i = 0; i < sampleCount; i++) {
     if (readings[i] > 0 && abs((int)readings[i] - (int)median) <= OUTLIER_THRESHOLD_CM) {
       sum += readings[i];
       validCount++;
@@ -276,8 +292,6 @@ void measureWaterLevel(char* payload, size_t len) {
     last_tank_percent = 0.0f;
   }
 
-  writeConfigToFS();
-
   debugPrint(F("[SENSOR] mode: "));
   Serial.println(sensorModeName(sensor_mode));
   debugPrint(F("[SENSOR] median: "));
@@ -320,7 +334,17 @@ void enterDeepSleep() {
   infoPrint(F("[DEEP SLEEP] Sleeping for "));
   Serial.print(interval_seconds);
   Serial.println(F(" seconds."));
+
+  if (power_radio_off_before_sleep) {
+    if (client.connected()) {
+      client.disconnect();
+    }
+
+    WiFi.disconnect(true);
+    WiFi.mode(WIFI_OFF);
+  }
+
   Serial.flush();
-  delay(200);
+  delay(50);
   ESP.deepSleep(getSleepTime());
 }

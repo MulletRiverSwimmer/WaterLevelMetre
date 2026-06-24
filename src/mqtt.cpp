@@ -100,7 +100,15 @@ void setupNtpTime() {
 
 void setup_wifi() {
   delay(10);
+  WiFi.persistent(false);
   WiFi.mode(WIFI_STA);
+#ifdef ESP8266
+  if (power_wifi_modem_sleep) {
+    WiFi.setSleepMode(WIFI_MODEM_SLEEP);
+  } else {
+    WiFi.setSleepMode(WIFI_NONE_SLEEP);
+  }
+#endif
 
   char clientId[33];
   buildClientId(clientId, sizeof(clientId));
@@ -436,6 +444,56 @@ bool applyRemoteConfigJson(const char* json, char* resultMsg, size_t resultMsgLe
     appliedFields++;
   }
 
+  if (parseBoolField(doc["power_fast_sampling"], &parsedBool)) {
+    infoPrint(F("[CONFIG] power_fast_sampling: "));
+    Serial.print(power_fast_sampling);
+    Serial.print(F(" -> "));
+    Serial.println(parsedBool);
+    power_fast_sampling = parsedBool;
+    changed = true;
+    appliedFields++;
+  }
+
+  if (parseBoolField(doc["power_wifi_modem_sleep"], &parsedBool)) {
+    infoPrint(F("[CONFIG] power_wifi_modem_sleep: "));
+    Serial.print(power_wifi_modem_sleep);
+    Serial.print(F(" -> "));
+    Serial.println(parsedBool);
+    power_wifi_modem_sleep = parsedBool;
+    changed = true;
+    appliedFields++;
+  }
+
+  if (parseBoolField(doc["power_skip_net_diagnostics"], &parsedBool)) {
+    infoPrint(F("[CONFIG] power_skip_net_diagnostics: "));
+    Serial.print(power_skip_net_diagnostics);
+    Serial.print(F(" -> "));
+    Serial.println(parsedBool);
+    power_skip_net_diagnostics = parsedBool;
+    changed = true;
+    appliedFields++;
+  }
+
+  if (parseBoolField(doc["power_radio_off_before_sleep"], &parsedBool)) {
+    infoPrint(F("[CONFIG] power_radio_off_before_sleep: "));
+    Serial.print(power_radio_off_before_sleep);
+    Serial.print(F(" -> "));
+    Serial.println(parsedBool);
+    power_radio_off_before_sleep = parsedBool;
+    changed = true;
+    appliedFields++;
+  }
+
+  if (parseBoolField(doc["power_skip_second_measurement_after_cache_flush"], &parsedBool)) {
+    infoPrint(F("[CONFIG] power_skip_second_measurement_after_cache_flush: "));
+    Serial.print(power_skip_second_measurement_after_cache_flush);
+    Serial.print(F(" -> "));
+    Serial.println(parsedBool);
+    power_skip_second_measurement_after_cache_flush = parsedBool;
+    changed = true;
+    appliedFields++;
+  }
+
   if (doc["ntp_server"].is<const char*>()) {
     const char* s = doc["ntp_server"];
     if (s && strlen(s) > 0) {
@@ -606,6 +664,11 @@ void publishSettingsToMqtt() {
   doc["production_mode"] = production_mode;
   doc["log_level"] = stored_log_level;
   doc["ntp_enabled"] = ntp_enabled;
+  doc["power_fast_sampling"] = power_fast_sampling;
+  doc["power_wifi_modem_sleep"] = power_wifi_modem_sleep;
+  doc["power_skip_net_diagnostics"] = power_skip_net_diagnostics;
+  doc["power_radio_off_before_sleep"] = power_radio_off_before_sleep;
+  doc["power_skip_second_measurement_after_cache_flush"] = power_skip_second_measurement_after_cache_flush;
   doc["ntp_server"] = ntp_server;
   doc["timezone"] = device_timezone;
   doc["sensor_mode"] = sensor_mode;
@@ -668,12 +731,14 @@ void reconnect() {
     Serial.println(F(" (NOT CONNECTED)"));
   }
 
-  IPAddress brokerIp;
-  if (WiFi.hostByName(mqtt_server, brokerIp)) {
-    debugPrint(F("[MQTT] Resolved broker IP: "));
-    Serial.println(brokerIp);
-  } else {
-    errorPrintln(F("[MQTT] Failed to resolve broker hostname"));
+  if (currentLogLevel >= LOG_DEBUG && !production_mode && !power_skip_net_diagnostics) {
+    IPAddress brokerIp;
+    if (WiFi.hostByName(mqtt_server, brokerIp)) {
+      debugPrint(F("[MQTT] Resolved broker IP: "));
+      Serial.println(brokerIp);
+    } else {
+      errorPrintln(F("[MQTT] Failed to resolve broker hostname"));
+    }
   }
 
   client.setServer(mqtt_server, mqtt_port);
@@ -682,17 +747,19 @@ void reconnect() {
   client.setBufferSize(MQTT_MAX_PACKET_SIZE);
 #endif
 
-  bool pingResult = Ping.ping(mqtt_server, 1);
-  if (pingResult) {
-    debugPrint(F("[MQTT] Ping to "));
-    Serial.print(mqtt_server);
-    Serial.print(F(" successful, avg RTT "));
-    Serial.print(Ping.averageTime());
-    Serial.println(F(" ms"));
-  } else {
-    debugPrint(F("[MQTT] Ping to "));
-    Serial.print(mqtt_server);
-    Serial.println(F(" failed"));
+  if (currentLogLevel >= LOG_DEBUG && !production_mode && !power_skip_net_diagnostics) {
+    bool pingResult = Ping.ping(mqtt_server, 1);
+    if (pingResult) {
+      debugPrint(F("[MQTT] Ping to "));
+      Serial.print(mqtt_server);
+      Serial.print(F(" successful, avg RTT "));
+      Serial.print(Ping.averageTime());
+      Serial.println(F(" ms"));
+    } else {
+      debugPrint(F("[MQTT] Ping to "));
+      Serial.print(mqtt_server);
+      Serial.println(F(" failed"));
+    }
   }
 
   while (!client.connected() && retries < mqtt_connect_attempts) {

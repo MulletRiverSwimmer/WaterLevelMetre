@@ -6,6 +6,11 @@ uint8_t stored_log_level = LOG_DEBUG;
 LogLevel currentLogLevel = LOG_DEBUG;
 bool enable_deep_sleep = false;
 bool ntp_enabled = true;
+bool power_fast_sampling = true;
+bool power_wifi_modem_sleep = true;
+bool power_skip_net_diagnostics = true;
+bool power_radio_off_before_sleep = true;
+bool power_skip_second_measurement_after_cache_flush = true;
 uint8_t sensor_mode = SENSOR_MODE_TRIG_ECHO;
 
 float running_avg_buffer[RUNNING_AVG_SAMPLES] = {0.0f};
@@ -274,7 +279,8 @@ void loop() {
       debugPrintln(F("[MQTT] All payloads sent, clearing cache."));
       LittleFS.remove(CACHE_FILE);
 
-      if (cacheExisted) {
+      bool allowSecondMeasurement = (!enable_deep_sleep) || (!power_skip_second_measurement_after_cache_flush);
+      if (cacheExisted && allowSecondMeasurement) {
         char secondPayload[160] = {0};
         debugPrintln(F("[MQTT] Cache backlog cleared, re-measuring and sending another payload."));
 

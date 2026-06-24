@@ -32,6 +32,9 @@
 #define READING_DELAY_MS 500
 #define OUTLIER_THRESHOLD_CM 10
 
+#define PROD_NUM_READINGS 5
+#define PROD_READING_DELAY_MS 120
+
 #define SETTINGS_PAYLOAD_MAX 1024
 #define SERIAL_LINE_MAX      96
 #define CACHE_LINE_MAX       256
@@ -58,6 +61,11 @@ extern uint8_t stored_log_level;
 extern LogLevel currentLogLevel;
 extern bool enable_deep_sleep;
 extern bool ntp_enabled;
+extern bool power_fast_sampling;
+extern bool power_wifi_modem_sleep;
+extern bool power_skip_net_diagnostics;
+extern bool power_radio_off_before_sleep;
+extern bool power_skip_second_measurement_after_cache_flush;
 
 extern float running_avg_buffer[RUNNING_AVG_SAMPLES];
 extern uint8_t running_avg_index;

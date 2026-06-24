@@ -98,6 +98,11 @@ void printConfig() {
   debugPrint(F("NTP Sync: ")); Serial.println(ntp_enabled ? F("ON") : F("OFF"));
   debugPrint(F("NTP Server: ")); Serial.println(ntp_server);
   debugPrint(F("Timezone: ")); Serial.println(device_timezone);
+  debugPrint(F("Power Fast Sampling: ")); Serial.println(power_fast_sampling ? F("ON") : F("OFF"));
+  debugPrint(F("Power WiFi Modem Sleep: ")); Serial.println(power_wifi_modem_sleep ? F("ON") : F("OFF"));
+  debugPrint(F("Power Skip Net Diagnostics: ")); Serial.println(power_skip_net_diagnostics ? F("ON") : F("OFF"));
+  debugPrint(F("Power Radio Off Before Sleep: ")); Serial.println(power_radio_off_before_sleep ? F("ON") : F("OFF"));
+  debugPrint(F("Power Skip 2nd Cache Measurement: ")); Serial.println(power_skip_second_measurement_after_cache_flush ? F("ON") : F("OFF"));
   debugPrint(F("Last Depth: ")); Serial.print(last_depth_measured, 1); Serial.println(F(" cm"));
   debugPrint(F("Running Avg: ")); Serial.print(running_avg_value, 1); Serial.println(F(" cm"));
   debugPrint(F("Battery Voltage: ")); Serial.print(last_battery_voltage, 2); Serial.println(F(" V"));
