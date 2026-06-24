@@ -203,6 +203,17 @@ void publishConfigAck(bool success, const char* message) {
   publishMqttMessage(mqtt_config_ack_topic, ackPayload, false, false);
 }
 
+void clearRetainedConfigSetCommand() {
+  if (mqtt_config_set_topic[0] == '\0') return;
+
+  infoPrint(F("[MQTT] Clearing retained config/set command on topic: "));
+  Serial.println(mqtt_config_set_topic);
+
+  bool ok = publishMqttMessage(mqtt_config_set_topic, "", true, false);
+  infoPrint(F("[MQTT] Retained config/set clear result: "));
+  Serial.println(ok ? F("OK") : F("FAIL"));
+}
+
 bool applyRemoteConfigJson(const char* json, char* resultMsg, size_t resultMsgLen) {
   if (!json || !resultMsg || resultMsgLen == 0) return false;
 
@@ -499,6 +510,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
     publishConfigAck(ok, result);
 
     if (ok) {
+      clearRetainedConfigSetCommand();
       infoPrintln(F("[MQTT] Calling saveConfigAndPublish()"));
       saveConfigAndPublish();
     }
