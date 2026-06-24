@@ -376,7 +376,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
 
   if (strcmp(topic, mqtt_config_get_topic) == 0) {
     publishSettingsToMqtt();
-    publishConfigAck(true, "settings published");
+    infoPrintln(F("[MQTT] config/get handled; settings published"));
     return;
   }
 
