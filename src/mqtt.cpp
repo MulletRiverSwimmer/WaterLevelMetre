@@ -2,8 +2,13 @@
 
 static char g_last_received_production_mode[32] = "absent";
 static char g_last_received_control_origin[64] = "absent";
+static char g_last_received_control_tx_id[48] = "absent";
+static char g_last_received_device_id[48] = "absent";
+static char g_last_received_topic[96] = "absent";
+static char g_last_message_type[24] = "unknown";
 static bool g_last_received_has_production_mode = false;
 static size_t g_last_received_payload_len = 0;
+static uint16_t g_last_applied_field_count = 0;
 
 const char* mqttStateName(int state) {
   switch (state) {
@@ -176,16 +181,21 @@ void processIncomingMqtt(uint32_t timeoutMs) {
 }
 
 void publishConfigAck(bool success, const char* message) {
-  char ackPayload[420];
+  char ackPayload[760];
   snprintf(ackPayload, sizeof(ackPayload),
-           "{\"device_id\":\"%s\",\"success\":%s,\"message\":\"%s\",\"received_control_origin\":\"%s\",\"received_production_mode\":\"%s\",\"received_has_production_mode\":%s,\"received_payload_len\":%u,\"applied_production_mode\":%s,\"applied_enable_deep_sleep\":%s,\"applied_ntp_enabled\":%s}",
+           "{\"device_id\":\"%s\",\"success\":%s,\"message\":\"%s\",\"message_type\":\"%s\",\"received_topic\":\"%s\",\"received_control_origin\":\"%s\",\"received_control_tx_id\":\"%s\",\"received_device_id\":\"%s\",\"received_production_mode\":\"%s\",\"received_has_production_mode\":%s,\"received_payload_len\":%u,\"applied_field_count\":%u,\"applied_production_mode\":%s,\"applied_enable_deep_sleep\":%s,\"applied_ntp_enabled\":%s}",
            device_id,
            success ? "true" : "false",
            message ? message : "",
+           g_last_message_type,
+           g_last_received_topic,
            g_last_received_control_origin,
+           g_last_received_control_tx_id,
+           g_last_received_device_id,
            g_last_received_production_mode,
            g_last_received_has_production_mode ? "true" : "false",
            (unsigned int)g_last_received_payload_len,
+           (unsigned int)g_last_applied_field_count,
            production_mode ? "true" : "false",
            enable_deep_sleep ? "true" : "false",
            ntp_enabled ? "true" : "false");
@@ -203,18 +213,42 @@ bool applyRemoteConfigJson(const char* json, char* resultMsg, size_t resultMsgLe
   JsonDocument doc;
   DeserializationError err = deserializeJson(doc, json);
   if (err) {
+    errorPrint(F("[CONFIG] JSON parse error: "));
+    Serial.println(err.c_str());
     snprintf(resultMsg, resultMsgLen, "invalid JSON");
     return false;
   }
 
   const char* origin = doc["control_origin"] | "";
+  const char* txId = doc["control_tx_id"] | "";
+  const char* reqDevice = doc["device_id"] | "";
   strlcpy(g_last_received_control_origin, origin, sizeof(g_last_received_control_origin));
+  strlcpy(g_last_received_control_tx_id, txId, sizeof(g_last_received_control_tx_id));
+  strlcpy(g_last_received_device_id, reqDevice, sizeof(g_last_received_device_id));
+
+  infoPrint(F("[CONFIG] origin="));
+  Serial.print(g_last_received_control_origin);
+  Serial.print(F(" tx_id="));
+  Serial.print(g_last_received_control_tx_id);
+  Serial.print(F(" request_device_id="));
+  Serial.println(g_last_received_device_id);
+
   if (strcmp(origin, "nodered-dashboard") != 0) {
+    errorPrint(F("[CONFIG] Unauthorized origin, rejecting: "));
+    Serial.println(origin);
     snprintf(resultMsg, resultMsgLen, "ignored: unauthorized origin");
     return false;
   }
 
+  if (reqDevice[0] != '\0' && strcmp(reqDevice, device_id) != 0) {
+    errorPrint(F("[CONFIG] Warning: request device_id does not match runtime device_id: "));
+    Serial.print(reqDevice);
+    Serial.print(F(" != "));
+    Serial.println(device_id);
+  }
+
   bool changed = false;
+  uint16_t appliedFields = 0;
 
   if (doc["production_mode"].isNull()) {
     g_last_received_has_production_mode = false;
@@ -261,31 +295,51 @@ bool applyRemoteConfigJson(const char* json, char* resultMsg, size_t resultMsgLe
   if (doc["interval_seconds"].is<unsigned long>()) {
     uint32_t v = doc["interval_seconds"].as<uint32_t>();
     if (v >= 5) {
+      infoPrint(F("[CONFIG] interval_seconds: "));
+      Serial.print(interval_seconds);
+      Serial.print(F(" -> "));
+      Serial.println(v);
       interval_seconds = v;
       changed = true;
+      appliedFields++;
     }
   }
 
   if (doc["sensor_offset_cm"].is<float>() || doc["sensor_offset_cm"].is<int>()) {
     float v = doc["sensor_offset_cm"].as<float>();
     if (v >= 0.0f) {
+      infoPrint(F("[CONFIG] sensor_offset_cm: "));
+      Serial.print(sensor_offset_cm);
+      Serial.print(F(" -> "));
+      Serial.println(v);
       sensor_offset_cm = v;
       changed = true;
+      appliedFields++;
     }
   }
 
   if (doc["tank_height_cm"].is<float>() || doc["tank_height_cm"].is<int>()) {
     float v = doc["tank_height_cm"].as<float>();
     if (v > 0.0f) {
+      infoPrint(F("[CONFIG] tank_height_cm: "));
+      Serial.print(tank_height_cm);
+      Serial.print(F(" -> "));
+      Serial.println(v);
       tank_height_cm = v;
       changed = true;
+      appliedFields++;
     }
   }
 
   bool parsedBool = false;
   if (parseBoolField(doc["enable_deep_sleep"], &parsedBool)) {
+    infoPrint(F("[CONFIG] enable_deep_sleep: "));
+    Serial.print(enable_deep_sleep);
+    Serial.print(F(" -> "));
+    Serial.println(parsedBool);
     enable_deep_sleep = parsedBool;
     changed = true;
+    appliedFields++;
   }
 
   if (parseBoolField(doc["production_mode"], &parsedBool)) {
@@ -295,6 +349,7 @@ bool applyRemoteConfigJson(const char* json, char* resultMsg, size_t resultMsgLe
     Serial.println(parsedBool);
     production_mode = parsedBool;
     changed = true;
+    appliedFields++;
   } else if (!doc["production_mode"].isNull()) {
     String raw;
     serializeJson(doc["production_mode"], raw);
@@ -306,28 +361,48 @@ bool applyRemoteConfigJson(const char* json, char* resultMsg, size_t resultMsgLe
     int lv = doc["log_level"].as<int>();
     if (lv < LOG_ERROR) lv = LOG_ERROR;
     if (lv > LOG_DEBUG) lv = LOG_DEBUG;
+    infoPrint(F("[CONFIG] log_level: "));
+    Serial.print(stored_log_level);
+    Serial.print(F(" -> "));
+    Serial.println(lv);
     stored_log_level = (uint8_t)lv;
     changed = true;
+    appliedFields++;
   }
 
   if (parseBoolField(doc["ntp_enabled"], &parsedBool)) {
+    infoPrint(F("[CONFIG] ntp_enabled: "));
+    Serial.print(ntp_enabled);
+    Serial.print(F(" -> "));
+    Serial.println(parsedBool);
     ntp_enabled = parsedBool;
     changed = true;
+    appliedFields++;
   }
 
   if (doc["ntp_server"].is<const char*>()) {
     const char* s = doc["ntp_server"];
     if (s && strlen(s) > 0) {
+      infoPrint(F("[CONFIG] ntp_server: "));
+      Serial.print(ntp_server);
+      Serial.print(F(" -> "));
+      Serial.println(s);
       strlcpy(ntp_server, s, sizeof(ntp_server));
       changed = true;
+      appliedFields++;
     }
   }
 
   if (doc["mqtt_connect_attempts"].is<int>()) {
     int v = doc["mqtt_connect_attempts"].as<int>();
     if (v > 0) {
+      infoPrint(F("[CONFIG] mqtt_connect_attempts: "));
+      Serial.print(mqtt_connect_attempts);
+      Serial.print(F(" -> "));
+      Serial.println(v);
       mqtt_connect_attempts = v;
       changed = true;
+      appliedFields++;
     }
   }
 
@@ -335,27 +410,41 @@ bool applyRemoteConfigJson(const char* json, char* resultMsg, size_t resultMsgLe
     int m = doc["sensor_mode"].as<int>();
     uint8_t newMode = (m == SENSOR_MODE_UART) ? SENSOR_MODE_UART : SENSOR_MODE_TRIG_ECHO;
     if (sensor_mode != newMode) {
+      infoPrint(F("[CONFIG] sensor_mode: "));
+      Serial.print(sensor_mode);
+      Serial.print(F(" -> "));
+      Serial.println(newMode);
       sensor_mode = newMode;
       setupSensorInterface();
       changed = true;
+      appliedFields++;
     }
   } else if (doc["sensor_mode"].is<const char*>()) {
     uint8_t parsed = sensor_mode;
     if (parseSensorMode(doc["sensor_mode"], &parsed) && parsed != sensor_mode) {
+      infoPrint(F("[CONFIG] sensor_mode(str): "));
+      Serial.print(sensor_mode);
+      Serial.print(F(" -> "));
+      Serial.println(parsed);
       sensor_mode = parsed;
       setupSensorInterface();
       changed = true;
+      appliedFields++;
     }
   }
 
   updateLogLevel();
 
   if (!changed) {
+    g_last_applied_field_count = 0;
     infoPrintln(F("[CONFIG] No valid changes detected"));
     snprintf(resultMsg, resultMsgLen, "no valid changes");
     return false;
   }
 
+  g_last_applied_field_count = appliedFields;
+  infoPrint(F("[CONFIG] Applied field count: "));
+  Serial.println(g_last_applied_field_count);
   infoPrintln(F("[CONFIG] Changes detected; returning success"));
   snprintf(resultMsg, resultMsgLen, "config updated");
   return true;
@@ -364,24 +453,39 @@ bool applyRemoteConfigJson(const char* json, char* resultMsg, size_t resultMsgLe
 void mqttCallback(char* topic, byte* payload, unsigned int length) {
   if (!topic || !payload) return;
 
+  strlcpy(g_last_received_topic, topic, sizeof(g_last_received_topic));
+  strlcpy(g_last_message_type, "other", sizeof(g_last_message_type));
+  g_last_received_payload_len = length;
+
   char msg[SETTINGS_PAYLOAD_MAX];
   size_t copyLen = (length < sizeof(msg) - 1) ? length : (sizeof(msg) - 1);
   memcpy(msg, payload, copyLen);
   msg[copyLen] = '\0';
   trimInPlace(msg);
 
+  if (copyLen < length) {
+    errorPrint(F("[MQTT] Payload truncated from "));
+    Serial.print(length);
+    Serial.print(F(" bytes to "));
+    Serial.println(copyLen);
+  }
+
   debugPrint(F("[MQTT] Message arrived ["));
   Serial.print(topic);
+  Serial.print(F("] len="));
+  Serial.print(length);
   Serial.print(F("] "));
   Serial.println(msg);
 
   if (strcmp(topic, mqtt_config_get_topic) == 0) {
+    strlcpy(g_last_message_type, "config/get", sizeof(g_last_message_type));
     publishSettingsToMqtt();
     infoPrintln(F("[MQTT] config/get handled; settings published"));
     return;
   }
 
   if (strcmp(topic, mqtt_config_set_topic) == 0) {
+    strlcpy(g_last_message_type, "config/set", sizeof(g_last_message_type));
     infoPrintln(F("[MQTT] config/set message received"));
     if (msg[0] == '\0') {
       infoPrintln(F("[MQTT] Empty config/set payload received; ignoring."));
@@ -400,6 +504,9 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
     }
     return;
   }
+
+  debugPrint(F("[MQTT] Ignoring unrelated topic: "));
+  Serial.println(topic);
 }
 
 void publishSettingsToMqtt() {
