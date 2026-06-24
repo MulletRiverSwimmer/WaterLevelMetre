@@ -7,6 +7,37 @@ TARGET_NAME="${3:-nodered}"
 CONTAINER_PROJECT_DIR="${4:-/data/projects/$(basename "${REPO_DIR}")}"
 DEPLOY_FLOW_FILE=""
 
+run_privileged() {
+	if "$@"; then
+		return 0
+	fi
+
+	if command -v sudo >/dev/null 2>&1; then
+		sudo -n "$@"
+		return $?
+	fi
+
+	return 1
+}
+
+run_runtime() {
+	local runtime="$1"
+	shift
+	run_privileged "${runtime}" "$@"
+}
+
+have_runtime_access() {
+	local runtime="$1"
+	shift
+	if "${runtime}" "$@" >/dev/null 2>&1; then
+		return 0
+	fi
+	if command -v sudo >/dev/null 2>&1 && sudo -n "${runtime}" "$@" >/dev/null 2>&1; then
+		return 0
+	fi
+	return 1
+}
+
 cleanup_tmp_flow() {
 	if [[ -n "${DEPLOY_FLOW_FILE}" && "${DEPLOY_FLOW_FILE}" != "${REPO_DIR}/flows.json" && -f "${DEPLOY_FLOW_FILE}" ]]; then
 		rm -f "${DEPLOY_FLOW_FILE}"
@@ -42,9 +73,9 @@ bump_dashboard_build_version() {
 	fi
 
 	if [[ -n "${runtime}" && -n "${target_name}" && -n "${project_dir}" ]]; then
-		deployed_current=$(sudo "${runtime}" exec "${target_name}" sh -lc "grep -E -o 'Dashboard build: [0-9]{4}-[0-9]{2}-[0-9]{2}\.[0-9]+' '${project_dir}/flows.json' 2>/dev/null | head -n1" || true)
+		deployed_current=$(run_runtime "${runtime}" exec "${target_name}" sh -lc "grep -E -o 'Dashboard build: [0-9]{4}-[0-9]{2}-[0-9]{2}\.[0-9]+' '${project_dir}/flows.json' 2>/dev/null | head -n1" || true)
 		if [[ -z "${deployed_current}" ]]; then
-			deployed_current=$(sudo "${runtime}" exec "${target_name}" sh -lc "grep -E -o 'Dashboard build: [0-9]{4}-[0-9]{2}-[0-9]{2}\.[0-9]+' '/data/flows.json' 2>/dev/null | head -n1" || true)
+			deployed_current=$(run_runtime "${runtime}" exec "${target_name}" sh -lc "grep -E -o 'Dashboard build: [0-9]{4}-[0-9]{2}-[0-9]{2}\.[0-9]+' '/data/flows.json' 2>/dev/null | head -n1" || true)
 		fi
 		if [[ -n "${deployed_current}" ]]; then
 			current="${deployed_current}"
@@ -76,13 +107,13 @@ sync_container_flows() {
 	local flow_src="${DEPLOY_FLOW_FILE:-${REPO_DIR}/flows.json}"
 
 	echo "[deploy] syncing flows.json to ${runtime} project: ${project_dir}"
-	if ! sudo "${runtime}" cp "${flow_src}" "${target_name}:${project_dir}/flows.json"; then
+	if ! run_runtime "${runtime}" cp "${flow_src}" "${target_name}:${project_dir}/flows.json"; then
 		return 1
 	fi
 
 	# Some Node-RED setups still run directly from /data/flows.json.
 	echo "[deploy] syncing flows.json to ${runtime} runtime: /data/flows.json"
-	if ! sudo "${runtime}" cp "${flow_src}" "${target_name}:/data/flows.json"; then
+	if ! run_runtime "${runtime}" cp "${flow_src}" "${target_name}:/data/flows.json"; then
 		echo "[deploy] warning: could not sync /data/flows.json" >&2
 	fi
 
@@ -92,24 +123,24 @@ sync_container_flows() {
 restart_target() {
 	local target_name="$1"
 
+	if command -v docker >/dev/null 2>&1 && run_runtime docker ps -a --format '{{.Names}}' | grep -Fxq "${target_name}"; then
+		echo "[deploy] restarting docker container: ${target_name}"
+		run_runtime docker restart "${target_name}"
+		run_runtime docker ps --filter "name=^${target_name}$"
+		return 0
+	fi
+
+	if command -v podman >/dev/null 2>&1 && run_runtime podman ps -a --format '{{.Names}}' | grep -Fxq "${target_name}"; then
+		echo "[deploy] restarting podman container: ${target_name}"
+		run_runtime podman restart "${target_name}"
+		run_runtime podman ps --filter "name=^${target_name}$"
+		return 0
+	fi
+
 	if command -v systemctl >/dev/null 2>&1 && systemctl list-unit-files --type=service --no-legend 2>/dev/null | awk '{print $1}' | grep -Fxq "${target_name}.service"; then
 		echo "[deploy] restarting systemd service: ${target_name}"
-		sudo systemctl restart "${target_name}"
-		sudo systemctl --no-pager --full status "${target_name}" | head -n 20
-		return 0
-	fi
-
-	if command -v docker >/dev/null 2>&1 && sudo docker ps -a --format '{{.Names}}' | grep -Fxq "${target_name}"; then
-		echo "[deploy] restarting docker container: ${target_name}"
-		sudo docker restart "${target_name}"
-		sudo docker ps --filter "name=^${target_name}$"
-		return 0
-	fi
-
-	if command -v podman >/dev/null 2>&1 && sudo podman ps -a --format '{{.Names}}' | grep -Fxq "${target_name}"; then
-		echo "[deploy] restarting podman container: ${target_name}"
-		sudo podman restart "${target_name}"
-		sudo podman ps --filter "name=^${target_name}$"
+		run_privileged systemctl restart "${target_name}"
+		run_privileged systemctl --no-pager --full status "${target_name}" | head -n 20
 		return 0
 	fi
 
@@ -125,14 +156,14 @@ update_active_project() {
 
 	update_host_repo "${branch}"
 
-	if command -v docker >/dev/null 2>&1 && sudo docker ps -a --format '{{.Names}}' | grep -Fxq "${target_name}"; then
+	if command -v docker >/dev/null 2>&1 && have_runtime_access docker ps -a --format '{{.Names}}' && run_runtime docker ps -a --format '{{.Names}}' | grep -Fxq "${target_name}"; then
 		bump_dashboard_build_version docker "${target_name}" "${project_dir}"
 		if sync_container_flows docker "${target_name}" "${project_dir}"; then
 			return 0
 		fi
 	fi
 
-	if command -v podman >/dev/null 2>&1 && sudo podman ps -a --format '{{.Names}}' | grep -Fxq "${target_name}"; then
+	if command -v podman >/dev/null 2>&1 && have_runtime_access podman ps -a --format '{{.Names}}' && run_runtime podman ps -a --format '{{.Names}}' | grep -Fxq "${target_name}"; then
 		bump_dashboard_build_version podman "${target_name}" "${project_dir}"
 		if sync_container_flows podman "${target_name}" "${project_dir}"; then
 			return 0
