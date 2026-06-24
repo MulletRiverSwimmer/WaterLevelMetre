@@ -62,10 +62,17 @@ sync_container_flows() {
 	local flow_src="${DEPLOY_FLOW_FILE:-${REPO_DIR}/flows.json}"
 
 	echo "[deploy] syncing flows.json to ${runtime} project: ${project_dir}"
-	if sudo "${runtime}" cp "${flow_src}" "${target_name}:${project_dir}/flows.json"; then
-		return 0
+	if ! sudo "${runtime}" cp "${flow_src}" "${target_name}:${project_dir}/flows.json"; then
+		return 1
 	fi
-	return 1
+
+	# Some Node-RED setups still run directly from /data/flows.json.
+	echo "[deploy] syncing flows.json to ${runtime} runtime: /data/flows.json"
+	if ! sudo "${runtime}" cp "${flow_src}" "${target_name}:/data/flows.json"; then
+		echo "[deploy] warning: could not sync /data/flows.json" >&2
+	fi
+
+	return 0
 }
 
 restart_target() {
