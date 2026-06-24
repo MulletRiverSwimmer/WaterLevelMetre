@@ -189,7 +189,8 @@ void publishConfigAck(bool success, const char* message) {
            production_mode ? "true" : "false",
            enable_deep_sleep ? "true" : "false",
            ntp_enabled ? "true" : "false");
-  publishMqttMessage(mqtt_config_ack_topic, ackPayload, true, false);
+  // ACKs should not be retained; stale retained ACKs can mask current save results.
+  publishMqttMessage(mqtt_config_ack_topic, ackPayload, false, false);
 }
 
 bool applyRemoteConfigJson(const char* json, char* resultMsg, size_t resultMsgLen) {
